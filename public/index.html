@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ec4899">
+    <title>BeautyBook - Салон Красоты</title>
+    
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/src/styles/variables.css">
+    <link rel="stylesheet" href="/src/styles/main.css">
+    <link rel="stylesheet" href="/src/styles/components.css">
+    
+    <!-- Prevent zoom on double tap (iOS) -->
+    <style>
+        * {
+            touch-action: manipulation;
+        }
+    </style>
+</head>
+<body>
+    <!-- App Container -->
+    <div id="app">
+        <!-- Контент будет загружен через JavaScript -->
+        <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 16px; color: var(--color-text-secondary);">Загрузка BeautyBook...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="/src/config.js"></script>
+    <script src="/src/scripts/telegram.js"></script>
+    <script src="/src/scripts/utils.js"></script>
+    <script src="/src/scripts/api.js"></script>
+    <script src="/src/scripts/router.js"></script>
+    <script src="/src/scripts/app.js"></script>
+</body>
+</html>
