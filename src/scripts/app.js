@@ -177,7 +177,7 @@ class App {
                         </div>
                     </div>
                     
-                    <button class="btn btn-primary btn-large" onclick="router.navigate('/masters')">
+                    <button class="btn btn-primary btn-large" id="book-button">
                         Записаться на услугу
                     </button>
                 </div>
@@ -457,8 +457,6 @@ class App {
 
 // Создаём глобальный экземпляр приложения
 window.app = new App();
-
-window.router = router;
 
 // Экспортируем для использования в других модулях
 export { App };
