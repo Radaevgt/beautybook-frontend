@@ -3,16 +3,16 @@
  */
 
 const CONFIG = {
-    // API URL
-    API_URL: 'https://billye-unoutraged-mephitically.ngrok-free.dev',
+    // API URL - ВАЖНО: с /api в конце
+    API_URL: 'https://billye-unoutraged-mephitically.ngrok-free.dev/api',
     
     // Telegram Bot
-    BOT_USERNAME: '@salonTESTrad_bot',
+    BOT_USERNAME: 'salonTESTrad_bot',
     
     // Настройки
-    BOOKING_SLOT_DURATION: 30, // минуты
-    MAX_BOOKING_DAYS: 30, // дней вперёд
-    MIN_CANCEL_HOURS: 24, // минимум часов до отмены
+    BOOKING_SLOT_DURATION: 30,
+    MAX_BOOKING_DAYS: 30,
+    MIN_CANCEL_HOURS: 24,
     
     // Pagination
     ITEMS_PER_PAGE: 20,
