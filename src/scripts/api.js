@@ -12,35 +12,35 @@ class API {
      * Базовый запрос
      */
     async request(endpoint, options = {}) {
+    try {
         const url = `${this.baseURL}${endpoint}`;
         
-        const headers = {
-            'Content-Type': 'application/json',
-            ...options.headers
+        const config = {
+            method: options.method || 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true',  // ← ДОБАВЬТЕ ЭТУ СТРОКУ
+                ...options.headers
+            }
         };
         
-        // Добавляем Telegram initData для авторизации
-        if (this.telegramApp && this.telegramApp.getInitData()) {
-            headers['X-Telegram-Init-Data'] = this.telegramApp.getInitData();
+        if (options.body) {
+            config.body = JSON.stringify(options.body);
         }
         
-        try {
-            const response = await fetch(url, {
-                ...options,
-                headers
-            });
-            
-            if (!response.ok) {
-                const error = await response.json().catch(() => ({ detail: 'Ошибка сервера' }));
-                throw new Error(error.detail || `HTTP ${response.status}`);
-            }
-            
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
+        const response = await fetch(url, config);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        return await response.json();
+        
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
     }
+}
     
     /**
      * GET запрос
