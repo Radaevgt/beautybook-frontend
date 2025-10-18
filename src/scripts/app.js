@@ -45,23 +45,26 @@ class App {
         }
     }
     
-    /**
+        /**
      * Загрузить начальные данные
      */
     async loadInitialData() {
         try {
-            // Загружаем данные о салоне
-            this.salon = await api.getSalon();
+            // Загружаем информацию о салоне
+            const salon = await this.api.getSalon();
             
             // Загружаем категории услуг
-            this.categories = await api.getServiceCategories();
+            const categories = await this.api.getServiceCategories();
             
-            console.log('Данные загружены:', {
-                salon: this.salon,
-                categories: this.categories
-            });
+            // Сохраняем в состояние
+            this.state.salon = salon;
+            this.state.categories = categories;
+            
+            console.log('Данные загружены:', { salon, categories });
+            
         } catch (error) {
-            throw new Error('Не удалось загрузить данные: ' + error.message);
+            console.error('Ошибка загрузки данных:', error);
+            this.showError('Не удалось загрузить данные');
         }
     }
     
