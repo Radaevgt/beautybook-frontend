@@ -31,7 +31,5 @@ const CONFIG = {
     }
 };
 
-// Экспорт
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = CONFIG;
-}
+// Экспорт по умолчанию
+export default CONFIG;
