@@ -1,75 +1,68 @@
 /**
- * Интеграция с Telegram Web App SDK
+ * Интеграция с Telegram Web App
  */
 
 class TelegramApp {
     constructor() {
         this.tg = window.Telegram?.WebApp;
-        this.initData = null;
         this.user = null;
-        
-        if (this.tg) {
-            this.init();
-        } else {
-            console.warn('Telegram Web App SDK не загружен');
-        }
+        this.isReady = false;
     }
     
     /**
      * Инициализация Telegram Web App
      */
     init() {
-        // Разворачиваем приложение на весь экран
-        this.tg.expand();
+        if (!this.tg) {
+            console.warn('Telegram Web App не доступен');
+            return;
+        }
         
-        // Включаем кнопку закрытия
-        this.tg.enableClosingConfirmation();
-        
-        // Получаем данные пользователя
-        this.initData = this.tg.initData;
-        this.user = this.tg.initDataUnsafe?.user;
-        
-        // Применяем тему Telegram
-        this.applyTheme();
-        
-        console.log('Telegram Web App инициализирован', {
-            version: this.tg.version,
-            platform: this.tg.platform,
-            user: this.user
-        });
+        try {
+            // Разворачиваем приложение на весь экран
+            this.tg.expand();
+            
+            // Включаем закрытие по свайпу
+            this.tg.enableClosingConfirmation();
+            
+            // Получаем данные пользователя
+            this.user = this.tg.initDataUnsafe?.user;
+            
+            // Настраиваем тему
+            this.setupTheme();
+            
+            // Говорим что готовы
+            this.tg.ready();
+            this.isReady = true;
+            
+            console.log('✅ Telegram Web App инициализирован');
+            console.log('Пользователь:', this.user);
+            
+        } catch (error) {
+            console.error('Ошибка инициализации Telegram Web App:', error);
+        }
     }
     
     /**
-     * Применить тему из Telegram
+     * Настроить тему приложения
      */
-    applyTheme() {
+    setupTheme() {
         if (!this.tg) return;
         
-        const theme = this.tg.themeParams;
+        const themeParams = this.tg.themeParams;
         
-        if (theme.bg_color) {
-            document.documentElement.style.setProperty('--tg-bg-color', theme.bg_color);
+        // Применяем цвета темы Telegram
+        if (themeParams.bg_color) {
+            document.documentElement.style.setProperty('--tg-bg-color', themeParams.bg_color);
         }
-        if (theme.text_color) {
-            document.documentElement.style.setProperty('--tg-text-color', theme.text_color);
+        
+        if (themeParams.text_color) {
+            document.documentElement.style.setProperty('--tg-text-color', themeParams.text_color);
         }
-        if (theme.button_color) {
-            document.documentElement.style.setProperty('--tg-button-color', theme.button_color);
+        
+        if (themeParams.button_color) {
+            document.documentElement.style.setProperty('--tg-button-color', themeParams.button_color);
         }
-    }
-    
-    /**
-     * Получить initData для авторизации
-     */
-    getInitData() {
-        return this.initData || '';
-    }
-    
-    /**
-     * Получить данные пользователя
-     */
-    getUser() {
-        return this.user;
     }
     
     /**
@@ -110,68 +103,6 @@ class TelegramApp {
     }
     
     /**
-     * Показать уведомление
-     */
-    showAlert(message) {
-        if (!this.tg) {
-            alert(message);
-            return;
-        }
-        this.tg.showAlert(message);
-    }
-    
-    /**
-     * Показать подтверждение
-     */
-    showConfirm(message, callback) {
-        if (!this.tg) {
-            const result = confirm(message);
-            callback(result);
-            return;
-        }
-        this.tg.showConfirm(message, callback);
-    }
-    
-    /**
-     * Показать попап
-     */
-    showPopup(params) {
-        if (!this.tg || !this.tg.showPopup) {
-            this.showAlert(params.message);
-            return;
-        }
-        this.tg.showPopup(params);
-    }
-    
-    /**
-     * Вибрация
-     */
-    hapticFeedback(type = 'light') {
-        if (!this.tg || !this.tg.HapticFeedback) return;
-        
-        switch (type) {
-            case 'light':
-                this.tg.HapticFeedback.impactOccurred('light');
-                break;
-            case 'medium':
-                this.tg.HapticFeedback.impactOccurred('medium');
-                break;
-            case 'heavy':
-                this.tg.HapticFeedback.impactOccurred('heavy');
-                break;
-            case 'success':
-                this.tg.HapticFeedback.notificationOccurred('success');
-                break;
-            case 'warning':
-                this.tg.HapticFeedback.notificationOccurred('warning');
-                break;
-            case 'error':
-                this.tg.HapticFeedback.notificationOccurred('error');
-                break;
-        }
-    }
-    
-    /**
      * Закрыть приложение
      */
     close() {
@@ -180,34 +111,43 @@ class TelegramApp {
     }
     
     /**
-     * Готово ли приложение
+     * Вибрация
      */
-    isReady() {
-        return this.tg?.isExpanded || false;
+    hapticFeedback(type = 'light') {
+        if (!this.tg) return;
+        
+        const types = {
+            'light': () => this.tg.HapticFeedback.impactOccurred('light'),
+            'medium': () => this.tg.HapticFeedback.impactOccurred('medium'),
+            'heavy': () => this.tg.HapticFeedback.impactOccurred('heavy'),
+            'success': () => this.tg.HapticFeedback.notificationOccurred('success'),
+            'error': () => this.tg.HapticFeedback.notificationOccurred('error'),
+            'warning': () => this.tg.HapticFeedback.notificationOccurred('warning')
+        };
+        
+        if (types[type]) {
+            types[type]();
+        }
     }
     
     /**
-     * Открыть ссылку
+     * Получить данные пользователя
      */
-    openLink(url) {
-        if (!this.tg) {
-            window.open(url, '_blank');
-            return;
-        }
-        this.tg.openLink(url);
+    getUser() {
+        return this.user;
     }
     
     /**
-     * Открыть Telegram ссылку
+     * Получить init data для API запросов
      */
-    openTelegramLink(url) {
-        if (!this.tg) {
-            window.open(url, '_blank');
-            return;
-        }
-        this.tg.openTelegramLink(url);
+    getInitData() {
+        if (!this.tg) return null;
+        return this.tg.initData;
     }
 }
 
-// Экспорт
+// Создаём экземпляр
 const telegramApp = new TelegramApp();
+
+// Экспортируем
+export { telegramApp };
