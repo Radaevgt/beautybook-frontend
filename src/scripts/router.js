@@ -100,9 +100,18 @@ class Router {
         });
         
         // Загружаем текущий путь
-        const currentPath = window.location.pathname;
-        this.navigate(currentPath || '/');
-    }
+        let currentPath = window.location.pathname;
+        
+        // Убираем префикс GitHub Pages
+        currentPath = currentPath.replace('/beautybook-frontend', '');
+        
+        // Если путь пустой, ставим /
+        if (!currentPath || currentPath === '/') {
+            currentPath = '/';
+        }
+        
+        this.navigate(currentPath);
+}
 }
 
 // Создаём экземпляр роутера
