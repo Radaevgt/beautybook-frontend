@@ -456,7 +456,9 @@ class App {
 }
 
 // Создаём глобальный экземпляр приложения
-window.app = new App();
+const app = new App();
+window.app = app;
+window.router = router; 
 
 // Экспортируем для использования в других модулях
 export { App };
