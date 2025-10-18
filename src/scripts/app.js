@@ -185,6 +185,17 @@ class App {
                 ${this.renderBottomNav('home')}
             </div>
         `;
+        
+        // ← ВСТАВЬТЕ СЮДА! После app.innerHTML
+        // Ждём рендеринга и добавляем обработчик
+        await new Promise(resolve => setTimeout(resolve, 0));
+        
+        const bookButton = document.getElementById('book-button');
+        if (bookButton) {
+            bookButton.addEventListener('click', () => {
+                router.navigate('/masters');
+            });
+        }
     }
     
     /**
