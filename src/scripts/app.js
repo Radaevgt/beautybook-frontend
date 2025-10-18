@@ -458,5 +458,7 @@ class App {
 // Создаём глобальный экземпляр приложения
 window.app = new App();
 
+window.router = router;
+
 // Экспортируем для использования в других модулях
 export { App };
