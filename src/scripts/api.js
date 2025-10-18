@@ -1,175 +1,93 @@
 /**
- * API клиент для работы с Backend
+ * API клиент для взаимодействия с backend
  */
 
+import CONFIG from '../config.js';
+
 class API {
-    constructor(baseURL) {
-        this.baseURL = baseURL || CONFIG.API_URL;
-        this.telegramApp = window.telegramApp;
+    constructor() {
+        this.baseURL = CONFIG.API_URL;
     }
     
     /**
-     * Базовый запрос
+     * Базовый метод для HTTP запросов
      */
     async request(endpoint, options = {}) {
-    try {
-        const url = `${this.baseURL}${endpoint}`;
-        
-        const config = {
-            method: options.method || 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'ngrok-skip-browser-warning': 'true',  // ← ДОБАВЬТЕ ЭТУ СТРОКУ
-                ...options.headers
+        try {
+            const url = `${this.baseURL}${endpoint}`;
+            
+            const config = {
+                method: options.method || 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true',
+                    ...options.headers
+                }
+            };
+            
+            if (options.body) {
+                config.body = JSON.stringify(options.body);
             }
-        };
-        
-        if (options.body) {
-            config.body = JSON.stringify(options.body);
+            
+            const response = await fetch(url, config);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+            
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
         }
-        
-        const response = await fetch(url, config);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        return await response.json();
-        
-    } catch (error) {
-        console.error('API Error:', error);
-        throw error;
-    }
-}
-    
-    /**
-     * GET запрос
-     */
-    async get(endpoint, params = {}) {
-        const queryString = new URLSearchParams(params).toString();
-        const url = queryString ? `${endpoint}?${queryString}` : endpoint;
-        
-        return this.request(url, {
-            method: 'GET'
-        });
     }
     
-    /**
-     * POST запрос
-     */
-    async post(endpoint, data = {}) {
-        return this.request(endpoint, {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
-    }
-    
-    /**
-     * PUT запрос
-     */
-    async put(endpoint, data = {}) {
-        return this.request(endpoint, {
-            method: 'PUT',
-            body: JSON.stringify(data)
-        });
-    }
-    
-    /**
-     * PATCH запрос
-     */
-    async patch(endpoint, data = {}) {
-        return this.request(endpoint, {
-            method: 'PATCH',
-            body: JSON.stringify(data)
-        });
-    }
-    
-    /**
-     * DELETE запрос
-     */
-    async delete(endpoint) {
-        return this.request(endpoint, {
-            method: 'DELETE'
-        });
-    }
-    
-    // ============================================
-    // SALON
-    // ============================================
-    
+    // Салон
     async getSalon() {
-        return this.get('/salon');
+        return this.request('/salon');
     }
     
-    // ============================================
-    // MASTERS
-    // ============================================
+    // Категории услуг
+    async getServiceCategories() {
+        return this.request('/services/categories');
+    }
     
-    async getMasters(params = {}) {
-        return this.get('/masters', params);
+    // Мастера
+    async getMasters() {
+        return this.request('/masters');
     }
     
     async getMaster(id) {
-        return this.get(`/masters/${id}`);
+        return this.request(`/masters/${id}`);
     }
     
-    async getMasterServices(id) {
-        return this.get(`/masters/${id}/services`);
+    async getMasterServices(masterId) {
+        return this.request(`/masters/${masterId}/services`);
     }
     
-    // ============================================
-    // SERVICES
-    // ============================================
-    
-    async getServiceCategories() {
-        return this.get('/services/categories');
-    }
-    
-    async getServices(params = {}) {
-        return this.get('/services', params);
-    }
-    
+    // Услуги
     async getService(id) {
-        return this.get(`/services/${id}`);
+        return this.request(`/services/${id}`);
     }
     
-    async getServiceMasters(id) {
-        return this.get(`/services/${id}/masters`);
-    }
-    
-    // ============================================
-    // BOOKINGS
-    // ============================================
-    
+    // Расписание
     async getSchedule(masterId, date) {
-        return this.get(`/schedule/${masterId}`, { date });
+        return this.request(`/schedule/${masterId}?date=${date}`);
     }
     
+    // Записи
     async createBooking(data) {
-        return this.post('/bookings', data);
+        return this.request('/bookings', {
+            method: 'POST',
+            body: data
+        });
     }
     
-    async getMyBookings(status = null) {
-        const params = status ? { status } : {};
-        return this.get('/bookings/my', params);
-    }
-    
-    async cancelBooking(id) {
-        return this.delete(`/bookings/${id}`);
-    }
-    
-    // ============================================
-    // REVIEWS
-    // ============================================
-    
-    async createReview(data) {
-        return this.post('/reviews', data);
-    }
-    
-    async getMasterReviews(masterId, params = {}) {
-        return this.get(`/masters/${masterId}/reviews`, params);
+    async getMyBookings() {
+        return this.request('/bookings/my');
     }
 }
 
-// Создаём экземпляр API
-const api = new API();
+// Экспорт класса
+export { API };
