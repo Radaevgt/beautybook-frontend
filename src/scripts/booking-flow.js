@@ -51,31 +51,31 @@ export class BookingFlow {
 
         const html = `
             <div class="booking-step" data-step="1">
-                <div class="page-header">
+                <div class="booking-header">
                     <button class="back-btn" onclick="history.back()">
-                        <i class="fas fa-arrow-left"></i>
+                        <i class="icon-arrow-left"></i>
                     </button>
                     <h2>Подтверждение выбора</h2>
                     <div class="step-indicator">Шаг 1 из 4</div>
                 </div>
 
-                <div class="page-container">
-                    <div class="master-card-mini">
-                        <img src="${master.photo_url}" alt="${master.name}">
+                <div class="booking-summary">
+                    <div class="master-info">
+                        <img src="${master.photo_url}" alt="${master.name}" class="master-avatar">
                         <div>
                             <h3>${master.name}</h3>
                             <p class="specialty">${master.specialty}</p>
                         </div>
                     </div>
 
-                    <div class="service-card">
+                    <div class="service-info">
                         <h4>${service.name}</h4>
-                        <div class="service-meta">
-                            <span class="service-duration">
-                                <i class="fas fa-clock"></i> ${service.duration} мин
+                        <div class="service-details">
+                            <span class="duration">
+                                <i class="icon-clock"></i> ${service.duration} мин
                             </span>
-                            <span class="service-price">
-                                ${service.price} ₽
+                            <span class="price">
+                                <i class="icon-ruble"></i> ${service.price} ₽
                             </span>
                         </div>
                     </div>
@@ -83,8 +83,8 @@ export class BookingFlow {
 
                 <div class="booking-actions">
                     <button class="booking-action-btn" onclick="bookingFlow.nextStep()">
-                        Выбрать дату и время
-                    </button>
+                    Выбрать дату и время
+                </button>
                 </div>
             </div>
         `;
@@ -98,15 +98,15 @@ export class BookingFlow {
     renderStep2() {
         const html = `
             <div class="booking-step" data-step="2">
-                <div class="page-header">
+                <div class="booking-header">
                     <button class="back-btn" onclick="bookingFlow.prevStep()">
-                        <i class="fas fa-arrow-left"></i>
+                        <i class="icon-arrow-left"></i>
                     </button>
                     <h2>Выберите дату</h2>
                     <div class="step-indicator">Шаг 2 из 4</div>
                 </div>
 
-                <div id="calendar-container" class="page-container">
+                <div id="calendar-container">
                     ${this.renderCalendar()}
                 </div>
             </div>
@@ -177,26 +177,21 @@ export class BookingFlow {
 
         const html = `
             <div class="booking-step" data-step="3">
-                <div class="page-header">
+                <div class="booking-header">
                     <button class="back-btn" onclick="bookingFlow.prevStep()">
-                        <i class="fas fa-arrow-left"></i>
+                        <i class="icon-arrow-left"></i>
                     </button>
                     <h2>Выберите время</h2>
                     <div class="step-indicator">Шаг 3 из 4</div>
                 </div>
 
-                <div class="page-container">
-                    <div class="selected-date">
-                        <i class="fas fa-calendar"></i>
-                        ${formatDate(date)}
-                    </div>
+                <div class="selected-date">
+                    <i class="icon-calendar"></i>
+                    ${formatDate(date)}
+                </div>
 
-                    <div id="time-slots-container">
-                        <div class="loading-spinner">
-                            <div class="spinner"></div>
-                            Загрузка доступного времени...
-                        </div>
-                    </div>
+                <div id="time-slots-container">
+                    <div class="loading-spinner">Загрузка доступного времени...</div>
                 </div>
             </div>
         `;
@@ -220,7 +215,7 @@ export class BookingFlow {
             if (slots.length === 0) {
                 document.getElementById('time-slots-container').innerHTML = `
                     <div class="empty-state">
-                        <i class="fas fa-calendar-times"></i>
+                        <i class="icon-calendar-x"></i>
                         <p>На эту дату нет свободного времени</p>
                         <button class="btn-secondary" onclick="bookingFlow.prevStep()">
                             Выбрать другую дату
@@ -231,6 +226,7 @@ export class BookingFlow {
             }
 
             const slotsHtml = slots.map(time => {
+                const [hours, minutes] = time.split(':');
                 const endTime = this.calculateEndTime(time, service.duration);
                 const isSelected = this.bookingData.time === time;
 
@@ -239,22 +235,14 @@ export class BookingFlow {
                          data-time="${time}"
                          onclick="bookingFlow.selectTime('${time}')">
                         <div class="time-start">${time}</div>
-                        <div class="time-end">${endTime}</div>
+                        <div class="time-end">до ${endTime}</div>
                     </div>
                 `;
             }).join('');
 
             document.getElementById('time-slots-container').innerHTML = `
-                <div class="time-slots">
+                <div class="time-slots-grid">
                     ${slotsHtml}
-                </div>
-                <div class="booking-actions">
-                    <button class="booking-action-btn" 
-                            id="continue-btn"
-                            onclick="bookingFlow.nextStep()"
-                            ${!this.bookingData.time ? 'disabled' : ''}>
-                        Продолжить
-                    </button>
                 </div>
             `;
 
@@ -262,7 +250,7 @@ export class BookingFlow {
             console.error('Ошибка загрузки слотов:', error);
             document.getElementById('time-slots-container').innerHTML = `
                 <div class="error-state">
-                    <i class="fas fa-exclamation-triangle"></i>
+                    <i class="icon-alert"></i>
                     <p>Ошибка загрузки доступного времени</p>
                     <button class="btn-secondary" onclick="bookingFlow.loadTimeSlots()">
                         Попробовать снова
@@ -284,105 +272,138 @@ export class BookingFlow {
         });
         document.querySelector(`[data-time="${time}"]`).classList.add('selected');
 
-        // Активируем кнопку "Продолжить"
-        const continueBtn = document.getElementById('continue-btn');
-        if (continueBtn) {
-            continueBtn.disabled = false;
-        }
+        // Переходим к вводу контактов
+        setTimeout(() => this.nextStep(), 300);
     }
 
     /**
-     * ШАГ 4: Контактные данные
+     * ШАГ 4: Ввод контактных данных
      */
     renderStep4() {
-        const { clientName, clientPhone, comment } = this.bookingData;
+        const tg = window.Telegram?.WebApp;
+        const user = tg?.initDataUnsafe?.user;
+
+        // Автозаполнение имени из Telegram
+        if (user && !this.bookingData.clientName) {
+            this.bookingData.clientName = `${user.first_name} ${user.last_name || ''}`.trim();
+        }
 
         const html = `
             <div class="booking-step" data-step="4">
-                <div class="page-header">
+                <div class="booking-header">
                     <button class="back-btn" onclick="bookingFlow.prevStep()">
-                        <i class="fas fa-arrow-left"></i>
+                        <i class="icon-arrow-left"></i>
                     </button>
                     <h2>Контактные данные</h2>
                     <div class="step-indicator">Шаг 4 из 4</div>
                 </div>
 
-                <div class="page-container">
-                    <form id="contact-form" onsubmit="return false;">
-                        <div class="form-group">
-                            <label for="client-name">Ваше имя *</label>
-                            <input 
-                                type="text" 
-                                id="client-name" 
-                                value="${clientName}"
-                                placeholder="Введите ваше имя"
-                                required>
-                        </div>
+                <form id="contact-form" onsubmit="bookingFlow.submitBooking(event)">
+                    <div class="form-group">
+                        <label for="client-name">Ваше имя *</label>
+                        <input 
+                            type="text" 
+                            id="client-name" 
+                            name="clientName"
+                            value="${this.bookingData.clientName}"
+                            placeholder="Иван Иванов"
+                            required
+                        >
+                    </div>
 
-                        <div class="form-group">
-                            <label for="client-phone">Телефон *</label>
-                            <input 
-                                type="tel" 
-                                id="client-phone" 
-                                value="${clientPhone}"
-                                placeholder="+7 (___) ___-__-__"
-                                required>
-                            <small>Мы отправим вам напоминание о записи</small>
-                        </div>
+                    <div class="form-group">
+                        <label for="client-phone">Телефон *</label>
+                        <input 
+                            type="tel" 
+                            id="client-phone" 
+                            name="clientPhone"
+                            value="${this.bookingData.clientPhone}"
+                            placeholder="+7 (999) 123-45-67"
+                            pattern="\\+7\\s?\\(?\\d{3}\\)?\\s?\\d{3}-?\\d{2}-?\\d{2}"
+                            required
+                        >
+                        <small>Формат: +7 (999) 123-45-67</small>
+                    </div>
 
-                        <div class="form-group">
-                            <label for="client-comment">Комментарий (необязательно)</label>
-                            <textarea 
-                                id="client-comment" 
-                                placeholder="Есть пожелания?">${comment}</textarea>
-                        </div>
-                    </form>
-                </div>
+                    <div class="form-group">
+                        <label for="comment">Комментарий (необязательно)</label>
+                        <textarea 
+                            id="comment" 
+                            name="comment"
+                            placeholder="Особые пожелания или вопросы"
+                            rows="3"
+                        >${this.bookingData.comment}</textarea>
+                    </div>
 
-                <div class="booking-actions">
-                    <button class="booking-action-btn" onclick="bookingFlow.saveContactsAndContinue()">
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" name="notifications" checked>
+                            <span>Отправлять напоминания о записи</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="booking-action-btn">
                         Продолжить
                     </button>
-                </div>
+                </form>
             </div>
         `;
 
         document.getElementById('app').innerHTML = html;
 
-        // Автозаполнение из Telegram
-        if (window.Telegram?.WebApp?.initDataUnsafe?.user && !clientName) {
-            const user = window.Telegram.WebApp.initDataUnsafe.user;
-            document.getElementById('client-name').value = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-        }
+        // Маска для телефона
+        this.setupPhoneMask();
     }
 
     /**
-     * Сохранить контакты и перейти к подтверждению
+     * Маска для ввода телефона
      */
-    saveContactsAndContinue() {
-        const name = document.getElementById('client-name').value.trim();
-        const phone = document.getElementById('client-phone').value.trim();
-        const comment = document.getElementById('client-comment').value.trim();
+    setupPhoneMask() {
+        const phoneInput = document.getElementById('client-phone');
+        
+        phoneInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length > 0) {
+                if (value[0] !== '7') {
+                    value = '7' + value;
+                }
+                
+                let formatted = '+7';
+                if (value.length > 1) {
+                    formatted += ' (' + value.substring(1, 4);
+                }
+                if (value.length >= 5) {
+                    formatted += ') ' + value.substring(4, 7);
+                }
+                if (value.length >= 8) {
+                    formatted += '-' + value.substring(7, 9);
+                }
+                if (value.length >= 10) {
+                    formatted += '-' + value.substring(9, 11);
+                }
+                
+                e.target.value = formatted;
+            }
+        });
+    }
 
-        if (!name) {
-            showToast('Введите ваше имя', 'error');
-            return;
-        }
-
-        if (!phone) {
-            showToast('Введите номер телефона', 'error');
-            return;
-        }
-
-        this.bookingData.clientName = name;
-        this.bookingData.clientPhone = phone;
-        this.bookingData.comment = comment;
-
+    /**
+     * Отправка формы и переход к подтверждению
+     */
+    submitBooking(event) {
+        event.preventDefault();
+        
+        const formData = new FormData(event.target);
+        this.bookingData.clientName = formData.get('clientName');
+        this.bookingData.clientPhone = formData.get('clientPhone');
+        this.bookingData.comment = formData.get('comment');
+        
         this.nextStep();
     }
 
     /**
-     * ШАГ 5: Подтверждение записи
+     * ШАГ 5: Финальное подтверждение
      */
     renderStep5() {
         const { master, service, date, time, clientName, clientPhone, comment } = this.bookingData;
@@ -390,71 +411,67 @@ export class BookingFlow {
 
         const html = `
             <div class="booking-step" data-step="5">
-                <div class="page-header">
+                <div class="booking-header">
                     <button class="back-btn" onclick="bookingFlow.prevStep()">
-                        <i class="fas fa-arrow-left"></i>
+                        <i class="icon-arrow-left"></i>
                     </button>
                     <h2>Подтверждение записи</h2>
                 </div>
 
-                <div class="page-container">
-                    <div class="booking-confirmation">
-                        <h3>Проверьте данные записи</h3>
+                <div class="booking-confirmation">
+                    <h3>Проверьте данные записи</h3>
 
-                        <div class="confirmation-section">
-                            <div class="section-title">МАСТЕР</div>
-                            <div class="master-card-mini">
-                                <img src="${master.photo_url}" alt="${master.name}">
-                                <div>
-                                    <strong>${master.name}</strong>
-                                    <small>${master.specialty}</small>
-                                </div>
+                    <div class="confirmation-section">
+                        <div class="section-title">Мастер</div>
+                        <div class="master-card-mini">
+                            <img src="${master.photo_url}" alt="${master.name}">
+                            <div>
+                                <strong>${master.name}</strong>
+                                <small>${master.specialty}</small>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="confirmation-section">
-                            <div class="section-title">УСЛУГА</div>
-                            <div class="service-card-mini">
-                                <strong>${service.name}</strong>
-                                <div class="service-meta">
-                                    <span><i class="fas fa-clock"></i> ${service.duration} мин</span>
-                                    <span><i class="fas fa-ruble-sign"></i> ${service.price} ₽</span>
-                                </div>
+                    <div class="confirmation-section">
+                        <div class="section-title">Услуга</div>
+                        <div class="service-card-mini">
+                            <strong>${service.name}</strong>
+                            <div class="service-meta">
+                                <span><i class="icon-clock"></i> ${service.duration} мин</span>
+                                <span><i class="icon-ruble"></i> ${service.price} ₽</span>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="confirmation-section">
-                            <div class="section-title">ДАТА И ВРЕМЯ</div>
-                            <div class="datetime-card">
-                                <div><i class="fas fa-calendar"></i> ${formatDate(date)}</div>
-                                <div><i class="fas fa-clock"></i> ${time} - ${endTime}</div>
-                            </div>
+                    <div class="confirmation-section">
+                        <div class="section-title">Дата и время</div>
+                        <div class="datetime-card">
+                            <div><i class="icon-calendar"></i> ${formatDate(date)}</div>
+                            <div><i class="icon-clock"></i> ${time} - ${endTime}</div>
                         </div>
+                    </div>
 
-                        <div class="confirmation-section">
-                            <div class="section-title">КОНТАКТЫ</div>
-                            <div class="contact-card">
-                                <div><i class="fas fa-user"></i> Глеб Радаев</div>
-                                <div><i class="fas fa-phone"></i> +7 (950) 353-70-90</div>
-                                ${comment ? `<div><i class="fas fa-comment"></i> ${comment}</div>` : ''}
-                            </div>
+                    <div class="confirmation-section">
+                        <div class="section-title">Контакты</div>
+                        <div class="contact-card">
+                            <div><i class="icon-user"></i> ${clientName}</div>
+                            <div><i class="icon-phone"></i> ${clientPhone}</div>
+                            ${comment ? `<div><i class="icon-message"></i> ${comment}</div>` : ''}
                         </div>
+                    </div>
 
-                        <div class="booking-total">
-                            <span class="booking-total-label">Итого:</span>
-                            <span class="booking-total-value">${service.price} ₽</span>
-                        </div>
+                    <div class="booking-total">
+                        <span class="booking-total-label">Итого:</span>
+                        <span class="booking-total-value">${service.price} ₽</span>
                     </div>
                 </div>
 
-                <div class="booking-actions">
-                    <button 
-                        class="booking-action-btn" 
-                        id="confirm-booking-btn"
-                        onclick="bookingFlow.confirmBooking()">
-                        Подтвердить запись
-                    </button>
-                </div>
+                <button 
+                    class="booking-action-btn" 
+                    id="confirm-booking-btn"
+                    onclick="bookingFlow.confirmBooking()">
+                    Подтвердить запись
+                </button>
             </div>
         `;
 
@@ -512,7 +529,7 @@ export class BookingFlow {
         const html = `
             <div class="success-screen">
                 <div class="success-icon">
-                    <i class="fas fa-check-circle"></i>
+                    <i class="icon-check-circle"></i>
                 </div>
 
                 <h2>Запись успешно создана!</h2>
@@ -539,21 +556,21 @@ export class BookingFlow {
                     </div>
                     <div class="detail-row">
                         <span>Стоимость:</span>
-                        <strong>${service.price} ₽</strong>
+                        <span class="booking-total-value">${service.price} ₽</span>
                     </div>
                 </div>
 
                 <div class="success-actions">
-                    <button class="btn btn-primary" onclick="router.navigate('/bookings')">
+                    <button class="btn-primary" onclick="router.navigate('bookings')">
                         Мои записи
                     </button>
-                    <button class="btn btn-secondary" onclick="router.navigate('/')">
+                    <button class="btn-secondary" onclick="router.navigate('home')">
                         На главную
                     </button>
                 </div>
 
                 <p class="reminder-text">
-                    <i class="fas fa-bell"></i>
+                    <i class="icon-bell"></i>
                     Мы отправим вам напоминание за 24 часа и за 1 час до визита
                 </p>
             </div>
