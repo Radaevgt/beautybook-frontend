@@ -552,3 +552,82 @@
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* ============================================
+   ФИКСАЦИЯ КНОПОК И ОТСТУПЫ
+   ============================================ */
+
+/* Контейнер страницы бронирования */
+.booking-step {
+    padding-bottom: 160px;
+}
+
+/* Фиксированные кнопки */
+.booking-actions {
+    position: fixed;
+    bottom: 70px;
+    left: 0;
+    right: 0;
+    padding: 16px 20px;
+    background: white;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 90;
+}
+
+.booking-action-btn {
+    width: 100%;
+    padding: 18px 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    transition: all 0.2s;
+}
+
+.booking-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.booking-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Плашка ИТОГО */
+.booking-total {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #e2e8f0;
+}
+
+.booking-total-label {
+    font-size: 16px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.booking-total-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* Отступы для контейнеров */
+.page-container {
+    padding-bottom: 180px;
+}
+
+#calendar-container,
+#time-slots-container {
+    padding-bottom: 100px;
+}
