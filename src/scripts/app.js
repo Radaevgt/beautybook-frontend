@@ -516,30 +516,36 @@ class App {
         return statusTexts[status] || status;
     }
     /**
-     * Отменить бронирование
-     */
+ * Отменить бронирование
+ */
     async cancelBooking(bookingId) {
         if (!confirm('Вы уверены что хотите отменить запись?')) {
             return;
         }
         
         try {
-            const { showLoading, hideLoading, showToast } = await import('./utils.js');
-            showLoading();
+            // Показываем загрузку
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading';
+            loadingDiv.innerHTML = '<div class="spinner"></div>';
+            document.body.appendChild(loadingDiv);
             
+            // Отменяем запись
             await this.api.cancelBooking(bookingId);
-            showToast('Запись успешно отменена', 'success');
             
-            // Перезагружаем список записей
+            // Показываем успех
+            window.showToast('Запись успешно отменена', 'success');
+            
+            // Перезагружаем список
             await this.renderBookings();
             
         } catch (error) {
             console.error('Ошибка отмены записи:', error);
-            const { showToast, hideLoading } = await import('./utils.js');
-            showToast('Ошибка отмены записи', 'error');
+            window.showToast('Ошибка отмены записи', 'error');
         } finally {
-            const { hideLoading } = await import('./utils.js');
-            hideLoading();
+            // Убираем загрузку
+            const loadingDiv = document.querySelector('.loading');
+            if (loadingDiv) loadingDiv.remove();
         }
     }
     /**
