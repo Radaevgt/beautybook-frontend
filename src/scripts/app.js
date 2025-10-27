@@ -365,7 +365,8 @@ class App {
                 b.status === 'confirmed' && new Date(`${b.date}T${b.time_start}`) > new Date()
             );
             const past = bookings.filter(b => 
-                b.status === 'completed' || new Date(`${b.date}T${b.time_start}`) <= new Date()
+                (b.status === 'completed' || b.status === 'cancelled') || 
+                (b.status === 'confirmed' && new Date(`${b.date}T${b.time_start}`) <= new Date())
             );
             
             app.innerHTML = `
