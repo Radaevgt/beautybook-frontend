@@ -1,0 +1,324 @@
+/**
+ * ==============================================
+ * СТИЛИ ДЛЯ СТРАНИЦЫ "МОИ ЗАПИСИ"
+ * ==============================================
+ */
+
+/* Фильтры по статусам */
+.filter-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    background: #fff;
+    overflow-x: auto;
+    border-bottom: 1px solid #eee;
+    -webkit-overflow-scrolling: touch;
+}
+
+.filter-tab {
+    flex-shrink: 0;
+    padding: 10px 20px;
+    background: #f5f5f5;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.filter-tab:hover {
+    background: #e8e8e8;
+}
+
+.filter-tab.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+/* Список записей */
+.bookings-list {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Карточка записи */
+.booking-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.booking-card:active {
+    transform: scale(0.98);
+}
+
+/* Статус записи */
+.booking-status {
+    margin-bottom: 16px;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-confirmed {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-completed {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.status-cancelled {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* Информация о записи */
+.booking-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.booking-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.booking-icon {
+    font-size: 20px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.booking-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.booking-details strong {
+    color: #666;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.booking-details span {
+    color: #000;
+    font-size: 15px;
+    word-wrap: break-word;
+}
+
+/* Действия с записью */
+.booking-actions {
+    display: flex;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.cancel-booking-btn {
+    flex: 1;
+    padding: 12px 20px;
+    background: #ffebee !important;
+    color: #c62828 !important;
+    border: none !important;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cancel-booking-btn:hover {
+    background: #ffcdd2 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(198, 40, 40, 0.2);
+}
+
+.cancel-booking-btn:active {
+    transform: translateY(0);
+}
+
+.cancel-booking-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Пустое состояние */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    min-height: 400px;
+}
+
+.empty-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h2 {
+    font-size: 22px;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.empty-state p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 30px;
+    max-width: 300px;
+}
+
+/* Индикатор загрузки */
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    min-height: 400px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-spinner p {
+    margin-top: 20px;
+    color: #666;
+    font-size: 16px;
+}
+
+/* Сообщение об ошибке */
+.error-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    min-height: 400px;
+}
+
+.error-message p {
+    font-size: 18px;
+    color: #c62828;
+    margin-bottom: 12px;
+}
+
+.error-details {
+    font-size: 14px !important;
+    color: #666 !important;
+    margin-bottom: 30px !important;
+}
+
+/* Toast уведомления */
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.toast-success {
+    background: #4caf50;
+    color: white;
+}
+
+.toast-error {
+    background: #f44336;
+    color: white;
+}
+
+/* Адаптация для маленьких экранов */
+@media (max-width: 360px) {
+    .filter-tab {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+    
+    .booking-card {
+        padding: 16px;
+    }
+    
+    .booking-details strong {
+        font-size: 12px;
+    }
+    
+    .booking-details span {
+        font-size: 14px;
+    }
+}
+
+/* Улучшенная анимация при появлении карточек */
+.booking-card {
+    animation: fadeInUp 0.4s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Задержка анимации для каждой последующей карточки */
+.booking-card:nth-child(1) { animation-delay: 0.1s; }
+.booking-card:nth-child(2) { animation-delay: 0.2s; }
+.booking-card:nth-child(3) { animation-delay: 0.3s; }
+.booking-card:nth-child(4) { animation-delay: 0.4s; }
+.booking-card:nth-child(5) { animation-delay: 0.5s; }
