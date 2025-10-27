@@ -412,6 +412,47 @@ class App {
                                     </div>
                                 ` : `
                                     <div class="bookings-list">
+                                        ${past.map(booking => this.renderBookingCard(booking)).join('')}
+                                    </div>
+                                `}
+                            </div>
+                        `}
+                    </div>
+                    
+                    ${this.renderBottomNav('bookings')}
+                </div>
+            `;
+            
+            // Обработчики табов
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.getAttribute('data-tab');
+                    
+                    // Переключаем активные табы
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.querySelector(`[data-content="${tabName}"]`).classList.add('active');
+                });
+            });
+            
+            // Обработчик кнопки "Записаться" в empty state
+            const navBtn = document.querySelector('[data-nav-route]');
+            if (navBtn) {
+                navBtn.addEventListener('click', () => {
+                    router.navigate(navBtn.getAttribute('data-nav-route'));
+                });
+            }
+            
+        } catch (error) {
+            console.error('Ошибка загрузки записей:', error);
+            this.showErrorScreen('Не удалось загрузить записи');
+        } finally {
+            hideLoading();
+        }
+    }
+    
     /**
      * Отрисовать карточку записи
      */
@@ -460,55 +501,6 @@ class App {
             </div>
         `;
     }
-            
-        } catch (error) {
-            console.error('Ошибка загрузки записей:', error);
-            this.showErrorScreen('Не удалось загрузить записи');
-        } finally {
-            hideLoading();
-        }
-    }
-    
-    /**
-     * Отрисовать карточку записи
-     */
-    renderBookingCard(booking) {
-        const isFuture = new Date(`${booking.date}T${booking.time_start}`) > new Date();
-        
-        return `
-            <div class="booking-card">
-                <div class="booking-header">
-                    <span class="booking-date">${formatDate(booking.date)}</span>
-                    <span class="booking-status status-${booking.status}">
-                        ${this.getStatusText(booking.status)}
-                    </span>
-                </div>
-                
-                <div class="booking-body">
-                    <div class="booking-master">
-                        <img src="${booking.master?.photo_url || '/assets/images/placeholder.jpg'}" alt="${booking.master?.name}">
-                        <div>
-                            <strong>${booking.master?.name || 'Мастер'}</strong>
-                            <span>${booking.service?.name || 'Услуга'}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="booking-details">
-                        <span><i class="fas fa-clock"></i> ${booking.time_start} - ${booking.time_end}</span>
-                        <span><i class="fas fa-ruble-sign"></i> ${booking.price} ₽</span>
-                    </div>
-                </div>
-                
-                ${isFuture && booking.status === 'confirmed' ? `
-                    <div class="booking-actions">
-                        <button class="btn btn-secondary btn-sm" data-booking-id="${booking.id}" data-action="cancel">
-                            Отменить
-                        </button>
-                    </div>
-                ` : ''}
-            </div>
-        `;
-    }
     
     /**
      * Получить текст статуса
@@ -522,26 +514,23 @@ class App {
         };
         return statusTexts[status] || status;
     }
-
+    
     /**
      * Отменить бронирование
      */
     async cancelBooking(bookingId) {
-        if (!confirm("Вы уверены что хотите отменить запись?")) {
+        if (!confirm('Вы уверены что хотите отменить запись?')) {
             return;
         }
         
         try {
             showLoading();
             await this.api.cancelBooking(bookingId);
-            showToast("Запись успешно отменена", "success");
-            
-            // Перезагружаем список записей
+            showToast('Запись успешно отменена', 'success');
             await this.renderMyBookings();
-            
         } catch (error) {
-            console.error("Ошибка отмены записи:", error);
-            showToast("Ошибка отмены записи", "error");
+            console.error('Ошибка отмены записи:', error);
+            showToast('Ошибка отмены записи', 'error');
         } finally {
             hideLoading();
         }
