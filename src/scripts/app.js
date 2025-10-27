@@ -3,9 +3,9 @@
  */
 
 import { API } from './api.js';
-import { formatDate, formatTime, showToast, showLoading, hideLoading } from './utils.js';
 import { router } from './router.js';
 import { telegramApp } from './telegram.js';
+import { showLoading, hideLoading, formatDate, formatTime, formatPrice } from './utils.js';
 
 class App {
     constructor() {
@@ -365,8 +365,7 @@ class App {
                 b.status === 'confirmed' && new Date(`${b.date}T${b.time_start}`) > new Date()
             );
             const past = bookings.filter(b => 
-                (b.status === 'completed' || b.status === 'cancelled') || 
-                (b.status === 'confirmed' && new Date(`${b.date}T${b.time_start}`) <= new Date())
+                b.status === 'completed' || new Date(`${b.date}T${b.time_start}`) <= new Date()
             );
             
             app.innerHTML = `
@@ -457,6 +456,9 @@ class App {
     /**
      * Отрисовать карточку записи
      */
+    /**
+     * Отрисовать карточку записи
+     */
     renderBookingCard(booking) {
         const isFuture = new Date(`${booking.date}T${booking.time_start}`) > new Date();
         
@@ -473,12 +475,12 @@ class App {
                     <div class="booking-info-row">
                         <span class="booking-info-icon"><i class="fas fa-user"></i></span>
                         <span class="booking-info-label">Мастер:</span>
-                        <span class="booking-master-name">${booking.master?.name || 'Услуга'}</span>
+                        <span class="booking-master-name">${booking.master?.name || "Не указан"}</span>
                     </div>
                     <div class="booking-info-row">
                         <span class="booking-info-icon"><i class="fas fa-cut"></i></span>
                         <span class="booking-info-label">Услуга:</span>
-                        <span class="booking-info-value">${booking.service?.name || 'Услуга'}</span>
+                        <span class="booking-info-value">${booking.service?.name || "Не указана"}</span>
                     </div>
                     <div class="booking-info-row">
                         <span class="booking-info-icon"><i class="fas fa-clock"></i></span>
@@ -492,17 +494,17 @@ class App {
                     </div>
                 </div>
                 
-                ${isFuture && booking.status === 'confirmed' ? `
+                ${isFuture && booking.status === "confirmed" ? `
                     <div class="booking-actions">
-                        <button class="btn-danger" onclick="app.cancelBooking(${booking.id})">
+                        <button class="btn-danger" onclick="window.app.cancelBooking(${booking.id})">
                             Отменить
                         </button>
                     </div>
-                ` : ''}
+                ` : ""}
             </div>
         `;
     }
-
+    
     /**
      * Получить текст статуса
      */
@@ -515,39 +517,7 @@ class App {
         };
         return statusTexts[status] || status;
     }
-    /**
- * Отменить бронирование
- */
-    async cancelBooking(bookingId) {
-        if (!confirm('Вы уверены что хотите отменить запись?')) {
-            return;
-        }
-        
-        try {
-            // Показываем загрузку
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'loading';
-            loadingDiv.innerHTML = '<div class="spinner"></div>';
-            document.body.appendChild(loadingDiv);
-            
-            // Отменяем запись
-            await this.api.cancelBooking(bookingId);
-            
-            // Показываем успех
-            window.showToast('Запись успешно отменена', 'success');
-            
-            // Перезагружаем список
-            await this.renderBookings();
-            
-        } catch (error) {
-            console.error('Ошибка отмены записи:', error);
-            window.showToast('Ошибка отмены записи', 'error');
-        } finally {
-            // Убираем загрузку
-            const loadingDiv = document.querySelector('.loading');
-            if (loadingDiv) loadingDiv.remove();
-        }
-    }
+    
     /**
      * Отобразить профиль
      */
@@ -641,3 +611,34 @@ window.router = router;
 
 // Экспортируем для использования в других модулях
 export { App };
+
+    /**
+     * Отменить бронирование
+     */
+    async cancelBooking(bookingId) {
+        if (!confirm('Вы уверены что хотите отменить запись?')) {
+            return;
+        }
+        
+        try {
+            showLoading();
+            await this.api.cancelBooking(bookingId);
+            showToast('Запись успешно отменена', 'success');
+            
+            // Перезагружаем список записей
+            await this.renderMyBookings();
+            
+        } catch (error) {
+            console.error('Ошибка отмены записи:', error);
+            showToast('Ошибка отмены записи', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+}
+
+// Создаём глобальный экземпляр приложения
+const app = new App();
+window.app = app;
+
+export { App, app };
