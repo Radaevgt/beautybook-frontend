@@ -345,3 +345,23 @@ h3 {
 .hidden {
     display: none !important;
 }
+
+/* ============================================
+   ИСПРАВЛЕНИЯ - ОБЩИЕ СТИЛИ
+   ============================================ */
+
+/* Контейнер приложения */
+#app {
+    padding-bottom: 80px !important;
+}
+
+/* Нижняя навигация */
+.bottom-nav {
+    height: 70px;
+}
+
+/* Отступ для контента */
+body .page-container,
+body .booking-step {
+    padding-bottom: 100px;
+}
