@@ -586,15 +586,14 @@
 }
 
 /* ============================================
-   ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ ЗАПИСЕЙ
+   ИСПРАВЛЕНИЯ - ОТСТУПЫ И СТИЛИ ЗАПИСЕЙ
    ============================================ */
 
 /* Контейнер страницы */
 .page-container {
     padding: 20px;
-    padding-bottom: 100px;
+    padding-bottom: 100px !important;
     min-height: 100vh;
-    background: #f8fafc;
 }
 
 /* Информация о записи */
@@ -631,16 +630,20 @@
 
 /* Имя мастера */
 .booking-master-name {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1e293b;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
 }
 
 /* Кнопка отмены */
-.booking-actions {
+.booking-card .booking-actions {
+    position: relative !important;
     display: flex;
     gap: 12px;
     margin-top: 16px;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 .btn-danger {
@@ -660,7 +663,7 @@
     color: white;
 }
 
-/* Карточки услуг */
+/* Карточки услуг - отступ снизу */
 .service-card {
     margin-bottom: 20px;
 }
@@ -671,8 +674,10 @@
 
 /* Список мастеров */
 .masters-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
     padding-bottom: 100px;
+}
+
+/* Список записей */
+.bookings-list {
+    padding-bottom: 20px;
 }
