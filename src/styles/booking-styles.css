@@ -1,324 +1,554 @@
-/**
- * ==============================================
- * СТИЛИ ДЛЯ СТРАНИЦЫ "МОИ ЗАПИСИ"
- * ==============================================
- */
+/* ============================================
+   СТИЛИ ДЛЯ ПРОЦЕССА БРОНИРОВАНИЯ
+   ============================================ */
 
-/* Фильтры по статусам */
-.filter-tabs {
+/* Шапка бронирования */
+.booking-header {
     display: flex;
-    gap: 8px;
-    padding: 16px;
-    background: #fff;
-    overflow-x: auto;
-    border-bottom: 1px solid #eee;
-    -webkit-overflow-scrolling: touch;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-.filter-tab {
-    flex-shrink: 0;
-    padding: 10px 20px;
-    background: #f5f5f5;
-    border: none;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #666;
+.booking-header h2 {
+    flex: 1;
+    text-align: center;
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.step-indicator {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Сводка на шаге 1 */
+.booking-summary {
+    padding: 1.5rem;
+}
+
+.master-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+}
+
+.master-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.master-info h3 {
+    margin: 0;
+    font-size: 1.125rem;
+}
+
+.specialty {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin: 0.25rem 0 0 0;
+}
+
+.service-info {
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+}
+
+.service-info h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1rem;
+}
+
+.service-details {
+    display: flex;
+    gap: 1.5rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.service-details i {
+    margin-right: 0.25rem;
+}
+
+/* ============================================
+   КАЛЕНДАРЬ
+   ============================================ */
+
+#calendar-container {
+    padding: 1rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 0.75rem;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    padding-bottom: 2rem;
+}
+
+.calendar-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 0.5rem;
+    background: var(--bg-secondary);
+    border: 2px solid transparent;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
+    transition: all 0.2s ease;
 }
 
-.filter-tab:hover {
-    background: #e8e8e8;
+.calendar-day:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.filter-tab.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.calendar-day.today {
+    border-color: var(--primary-color);
+}
+
+.calendar-day.selected {
+    background: var(--primary-color);
     color: white;
 }
 
-/* Список записей */
-.bookings-list {
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+.calendar-day.selected .day-name,
+.calendar-day.selected .day-month {
+    color: rgba(255, 255, 255, 0.8);
 }
 
-/* Карточка записи */
-.booking-card {
-    background: white;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+.calendar-day.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
-.booking-card:active {
-    transform: scale(0.98);
+.day-name {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
 }
 
-/* Статус записи */
-.booking-status {
-    margin-bottom: 16px;
-}
-
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 13px;
+.day-num {
+    font-size: 1.5rem;
     font-weight: 600;
+    margin: 0.25rem 0;
 }
 
-.status-confirmed {
-    background: #e8f5e9;
-    color: #2e7d32;
+.day-month {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
 }
 
-.status-completed {
-    background: #e3f2fd;
-    color: #1565c0;
-}
+/* ============================================
+   ВРЕМЕННЫЕ СЛОТЫ
+   ============================================ */
 
-.status-cancelled {
-    background: #ffebee;
-    color: #c62828;
-}
-
-/* Информация о записи */
-.booking-info {
+.selected-date {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.booking-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-}
-
-.booking-icon {
-    font-size: 20px;
-    line-height: 1;
-    flex-shrink: 0;
-}
-
-.booking-details {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-    min-width: 0;
-}
-
-.booking-details strong {
-    color: #666;
-    font-size: 13px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    margin: 1rem;
+    border-radius: 12px;
     font-weight: 500;
 }
 
-.booking-details span {
-    color: #000;
-    font-size: 15px;
-    word-wrap: break-word;
+.selected-date i {
+    color: var(--primary-color);
 }
 
-/* Действия с записью */
-.booking-actions {
+#time-slots-container {
+    padding: 0 1rem 2rem 1rem;
+}
+
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+}
+
+.time-slot {
     display: flex;
-    gap: 12px;
-    padding-top: 16px;
-    border-top: 1px solid #f0f0f0;
-}
-
-.cancel-booking-btn {
-    flex: 1;
-    padding: 12px 20px;
-    background: #ffebee !important;
-    color: #c62828 !important;
-    border: none !important;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 2px solid transparent;
     border-radius: 12px;
-    font-size: 15px;
-    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
-.cancel-booking-btn:hover {
-    background: #ffcdd2 !important;
+.time-slot:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(198, 40, 40, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.cancel-booking-btn:active {
-    transform: translateY(0);
+.time-slot.selected {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
-.cancel-booking-btn:disabled {
-    opacity: 0.6;
+.time-slot.disabled {
+    opacity: 0.3;
     cursor: not-allowed;
-    transform: none !important;
+    pointer-events: none;
 }
 
-/* Пустое состояние */
-.empty-state {
+.time-start {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.time-end {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.time-slot.selected .time-end {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================
+   ФОРМА КОНТАКТОВ
+   ============================================ */
+
+#contact-form {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.875rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.checkbox-group {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+}
+
+/* ============================================
+   ПОДТВЕРЖДЕНИЕ ЗАПИСИ
+   ============================================ */
+
+.booking-confirmation {
+    padding: 1.5rem;
+}
+
+.booking-confirmation h3 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.25rem;
     text-align: center;
-    min-height: 400px;
 }
 
-.empty-icon {
-    font-size: 80px;
-    margin-bottom: 20px;
-    opacity: 0.5;
+.confirmation-section {
+    margin-bottom: 1.5rem;
 }
 
-.empty-state h2 {
-    font-size: 22px;
-    color: #333;
-    margin-bottom: 12px;
+.section-title {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    font-weight: 600;
 }
 
-.empty-state p {
-    font-size: 16px;
-    color: #666;
-    margin-bottom: 30px;
-    max-width: 300px;
+.master-card-mini,
+.service-card-mini,
+.datetime-card,
+.contact-card {
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
 }
 
-/* Индикатор загрузки */
-.loading-spinner {
+.master-card-mini {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    min-height: 400px;
+    gap: 1rem;
 }
 
-.spinner {
+.master-card-mini img {
     width: 50px;
     height: 50px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #667eea;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    object-fit: cover;
+}
+
+.master-card-mini strong {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.master-card-mini small {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.service-card-mini strong {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.service-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.service-meta i {
+    margin-right: 0.25rem;
+}
+
+.datetime-card div,
+.contact-card div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+}
+
+.datetime-card i,
+.contact-card i {
+    color: var(--primary-color);
+    width: 20px;
+}
+
+.total-price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 12px;
+    font-size: 1.125rem;
+    margin-top: 1.5rem;
+}
+
+.total-price strong {
+    font-size: 1.5rem;
+}
+
+/* ============================================
+   ЭКРАН УСПЕХА
+   ============================================ */
+
+.success-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1.5rem;
+    text-align: center;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--success-color, #4caf50);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.success-icon i {
+    font-size: 3rem;
+    color: white;
+}
+
+.success-screen h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.success-message {
+    color: var(--text-secondary);
+    margin: 0 0 2rem 0;
+    font-size: 1.125rem;
+}
+
+.booking-details-card {
+    width: 100%;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-row span {
+    color: var(--text-secondary);
+}
+
+.success-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+.reminder-text {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.reminder-text i {
+    color: var(--primary-color);
+}
+
+/* ============================================
+   СОСТОЯНИЯ ЗАГРУЗКИ И ОШИБОК
+   ============================================ */
+
+.loading-spinner,
+.empty-state,
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.empty-state i,
+.error-state i {
+    font-size: 4rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.empty-state p,
+.error-state p {
+    color: var(--text-secondary);
+    margin: 0 0 1.5rem 0;
+}
+
+/* Спиннер */
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    margin-right: 0.5rem;
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to { transform: rotate(360deg); }
 }
 
-.loading-spinner p {
-    margin-top: 20px;
-    color: #666;
-    font-size: 16px;
+/* ============================================
+   АДАПТИВНОСТЬ
+   ============================================ */
+
+@media (min-width: 768px) {
+    .calendar-grid {
+        grid-template-columns: repeat(7, 1fr);
+    }
+    
+    .time-slots-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
 }
 
-/* Сообщение об ошибке */
-.error-message {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    text-align: center;
-    min-height: 400px;
-}
-
-.error-message p {
-    font-size: 18px;
-    color: #c62828;
-    margin-bottom: 12px;
-}
-
-.error-details {
-    font-size: 14px !important;
-    color: #666 !important;
-    margin-bottom: 30px !important;
-}
-
-/* Toast уведомления */
-.toast {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100px);
-    padding: 16px 24px;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 10000;
-    opacity: 0;
-    transition: all 0.3s ease;
-}
-
-.toast.show {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-}
-
-.toast-success {
-    background: #4caf50;
-    color: white;
-}
-
-.toast-error {
-    background: #f44336;
-    color: white;
-}
-
-/* Адаптация для маленьких экранов */
 @media (max-width: 360px) {
-    .filter-tab {
-        padding: 8px 16px;
-        font-size: 13px;
+    .calendar-grid {
+        grid-template-columns: repeat(4, 1fr);
     }
     
-    .booking-card {
-        padding: 16px;
-    }
-    
-    .booking-details strong {
-        font-size: 12px;
-    }
-    
-    .booking-details span {
-        font-size: 14px;
+    .time-slots-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
-
-/* Улучшенная анимация при появлении карточек */
-.booking-card {
-    animation: fadeInUp 0.4s ease;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Задержка анимации для каждой последующей карточки */
-.booking-card:nth-child(1) { animation-delay: 0.1s; }
-.booking-card:nth-child(2) { animation-delay: 0.2s; }
-.booking-card:nth-child(3) { animation-delay: 0.3s; }
-.booking-card:nth-child(4) { animation-delay: 0.4s; }
-.booking-card:nth-child(5) { animation-delay: 0.5s; }
