@@ -11,12 +11,13 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Стили -->
-    <link rel="stylesheet" href="./src/styles/main.css?v=2">
-    <link rel="stylesheet" href="./src/styles/components.css?v=2">
-    <link rel="stylesheet" href="./src/styles/booking-styles.css?v=2">
-    <link rel="stylesheet" href="./src/styles/variables.css?v=2">
-    <link rel="stylesheet" href="./src/styles/booking-styles-2.css?v=2">
+    <!-- Стили (в правильном порядке) -->
+    <link rel="stylesheet" href="./src/styles/variables.css?v=3">
+    <link rel="stylesheet" href="./src/styles/main.css?v=3">
+    <link rel="stylesheet" href="./src/styles/components.css?v=3">
+    <link rel="stylesheet" href="./src/styles/booking-styles.css?v=3">
+    <!-- ✅ Стили для страницы "Мои записи" -->
+    <link rel="stylesheet" href="./src/styles/booking-styles-2.css?v=3">
 </head>
 <body>
     <!-- Загрузка -->
@@ -24,13 +25,13 @@
         <div class="loading-spinner"></div>
         <p>Загрузка...</p>
     </div>
-
+    
     <!-- Приложение -->
     <div id="app"></div>
-
-    <!-- Toast -->
+    
+    <!-- Toast уведомления -->
     <div id="toast-container"></div>
-
+    
     <!-- Модальное окно -->
     <div id="modal-overlay" class="modal-overlay" style="display: none;">
         <div class="modal-content">
@@ -38,12 +39,14 @@
             <div id="modal-body"></div>
         </div>
     </div>
-
+    
     <!-- Конфигурация -->
     <script>
+        // API URL
         window.API_URL = 'https://billye-unoutraged-mephitically.ngrok-free.dev/api';
         console.log('🔗 API URL:', window.API_URL);
         
+        // Утилиты для модальных окон
         window.closeModal = () => {
             document.getElementById('modal-overlay').style.display = 'none';
         };
@@ -55,27 +58,47 @@
             overlay.style.display = 'flex';
         };
         
+        // Утилита для toast уведомлений
         window.showToast = (message, type = 'info') => {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
             toast.textContent = message;
             container.appendChild(toast);
+            
+            // Показываем
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            // Скрываем через 3 секунды
             setTimeout(() => {
+                toast.classList.remove('show');
                 toast.classList.add('fade-out');
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         };
-    </script>
-
-    <!-- Модули -->
-    <script type="module">
-        import { API } from './src/scripts/api.js';
-        import { router } from './src/scripts/router.js';
-        import { telegramApp } from './src/scripts/telegram.js';
-        import { BookingFlow } from './src/scripts/booking-flow.js';
-        import { App } from './src/scripts/app.js';
         
+        // Утилита для показа загрузки
+        window.showLoading = () => {
+            document.getElementById('loading-screen').style.display = 'flex';
+        };
+        
+        window.hideLoading = () => {
+            document.getElementById('loading-screen').style.display = 'none';
+        };
+    </script>
+    
+    <!-- ✅ Скрипт страницы "Мои записи" (ПЕРЕД модулями) -->
+    <script src="./src/scripts/bookings-page.js?v=3"></script>
+    
+    <!-- Модули (загружаются последними) -->
+    <script type="module">
+        import { API } from './src/scripts/api.js?v=3';
+        import { router } from './src/scripts/router.js?v=3';
+        import { telegramApp } from './src/scripts/telegram.js?v=3';
+        import { BookingFlow } from './src/scripts/booking-flow.js?v=3';
+        import { App } from './src/scripts/app.js?v=3';
+        
+        // Создаём глобальные объекты
         window.api = new API();
         window.router = router;
         window.bookingFlow = new BookingFlow();
@@ -83,6 +106,7 @@
         
         console.log('✅ Модули загружены');
         
+        // Инициализируем приложение
         const app = new App();
         window.app = app;
         
