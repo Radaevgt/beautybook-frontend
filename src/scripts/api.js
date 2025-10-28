@@ -1,5 +1,8 @@
 /**
  * API Module для работы с Backend
+ * 
+ * ИСПРАВЛЕНО:
+ * - Endpoint отмены бронирования: DELETE /bookings/{id}
  */
 
 export class API {
@@ -174,11 +177,13 @@ export class API {
 
     /**
      * Отменить бронирование
+     * 
+     * ИСПРАВЛЕНО: DELETE /bookings/{id} вместо POST /bookings/{id}/cancel
      */
     async cancelBooking(bookingId) {
         try {
-            const response = await fetch(`${this.baseURL}/bookings/${bookingId}/cancel`, {
-                method: 'POST',
+            const response = await fetch(`${this.baseURL}/bookings/${bookingId}`, {
+                method: 'DELETE',
                 headers: this.getHeaders()
             });
             return this.handleResponse(response);
