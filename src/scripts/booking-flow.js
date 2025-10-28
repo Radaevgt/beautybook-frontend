@@ -1,6 +1,10 @@
 /**
  * Модуль процесса бронирования
  * Управляет всеми шагами записи клиента
+ * 
+ * ИСПРАВЛЕНО:
+ * - Навигация: router.navigate('/bookings') и router.navigate('/')
+ * - Импорт из существующего utils.js
  */
 
 import { API } from './api.js';
@@ -53,7 +57,7 @@ export class BookingFlow {
             <div class="booking-step" data-step="1">
                 <div class="booking-header">
                     <button class="back-btn" onclick="history.back()">
-                        <i class="icon-arrow-left"></i>
+                        <i class="fas fa-arrow-left"></i>
                     </button>
                     <h2>Подтверждение выбора</h2>
                     <div class="step-indicator">Шаг 1 из 4</div>
@@ -72,10 +76,10 @@ export class BookingFlow {
                         <h4>${service.name}</h4>
                         <div class="service-details">
                             <span class="duration">
-                                <i class="icon-clock"></i> ${service.duration} мин
+                                <i class="fas fa-clock"></i> ${service.duration} мин
                             </span>
                             <span class="price">
-                                <i class="icon-ruble"></i> ${service.price} ₽
+                                <i class="fas fa-ruble-sign"></i> ${service.price} ₽
                             </span>
                         </div>
                     </div>
@@ -100,57 +104,86 @@ export class BookingFlow {
             <div class="booking-step" data-step="2">
                 <div class="booking-header">
                     <button class="back-btn" onclick="bookingFlow.prevStep()">
-                        <i class="icon-arrow-left"></i>
+                        <i class="fas fa-arrow-left"></i>
                     </button>
                     <h2>Выберите дату</h2>
                     <div class="step-indicator">Шаг 2 из 4</div>
                 </div>
 
-                <div id="calendar-container">
-                    ${this.renderCalendar()}
+                <div class="calendar-container">
+                    <div id="calendar"></div>
                 </div>
             </div>
         `;
 
         document.getElementById('app').innerHTML = html;
+        this.renderCalendar();
     }
 
     /**
-     * Отрисовка календаря (следующие 30 дней)
+     * Отрисовка календаря
      */
     renderCalendar() {
+        const calendarEl = document.getElementById('calendar');
         const today = new Date();
-        const calendar = [];
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
 
-        // Генерируем следующие 30 дней
+        // Генерируем даты на 30 дней вперёд
+        const dates = [];
         for (let i = 0; i < 30; i++) {
             const date = new Date(today);
             date.setDate(today.getDate() + i);
-            
-            const dayOfWeek = date.toLocaleDateString('ru-RU', { weekday: 'short' });
-            const dayNum = date.getDate();
-            const month = date.toLocaleDateString('ru-RU', { month: 'short' });
-            const dateStr = date.toISOString().split('T')[0];
-            
-            const isToday = i === 0;
-            const isSelected = this.bookingData.date === dateStr;
-
-            calendar.push(`
-                <div class="calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" 
-                     data-date="${dateStr}"
-                     onclick="bookingFlow.selectDate('${dateStr}')">
-                    <div class="day-name">${dayOfWeek}</div>
-                    <div class="day-num">${dayNum}</div>
-                    <div class="day-month">${month}</div>
-                </div>
-            `);
+            dates.push(date);
         }
 
-        return `
-            <div class="calendar-grid">
-                ${calendar.join('')}
-            </div>
-        `;
+        // Группируем по месяцам
+        const months = {};
+        dates.forEach(date => {
+            const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+            if (!months[monthKey]) {
+                months[monthKey] = {
+                    name: date.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }),
+                    dates: []
+                };
+            }
+            months[monthKey].dates.push(date);
+        });
+
+        // Рендерим месяцы и даты
+        let html = '';
+        for (const monthKey in months) {
+            const month = months[monthKey];
+            html += `
+                <div class="calendar-month">
+                    <h3 class="month-title">${month.name}</h3>
+                    <div class="calendar-dates">
+            `;
+
+            month.dates.forEach(date => {
+                const dateStr = date.toISOString().split('T')[0];
+                const dayName = date.toLocaleDateString('ru-RU', { weekday: 'short' });
+                const dayNum = date.getDate();
+                const isToday = date.toDateString() === today.toDateString();
+
+                html += `
+                    <button 
+                        class="calendar-date ${isToday ? 'today' : ''}" 
+                        data-date="${dateStr}"
+                        onclick="bookingFlow.selectDate('${dateStr}')">
+                        <div class="date-day">${dayName}</div>
+                        <div class="date-num">${dayNum}</div>
+                    </button>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+
+        calendarEl.innerHTML = html;
     }
 
     /**
@@ -159,39 +192,41 @@ export class BookingFlow {
     async selectDate(dateStr) {
         this.bookingData.date = dateStr;
 
-        // Обновляем выделение
-        document.querySelectorAll('.calendar-day').forEach(day => {
-            day.classList.remove('selected');
+        // Подсвечиваем выбранную дату
+        document.querySelectorAll('.calendar-date').forEach(btn => {
+            btn.classList.remove('selected');
         });
         document.querySelector(`[data-date="${dateStr}"]`).classList.add('selected');
 
         // Переходим к выбору времени
-        setTimeout(() => this.nextStep(), 300);
+        setTimeout(() => {
+            this.nextStep();
+        }, 300);
     }
 
     /**
      * ШАГ 3: Выбор времени
      */
     async renderStep3() {
-        const { master, service, date } = this.bookingData;
+        const { master, date } = this.bookingData;
 
         const html = `
             <div class="booking-step" data-step="3">
                 <div class="booking-header">
                     <button class="back-btn" onclick="bookingFlow.prevStep()">
-                        <i class="icon-arrow-left"></i>
+                        <i class="fas fa-arrow-left"></i>
                     </button>
                     <h2>Выберите время</h2>
                     <div class="step-indicator">Шаг 3 из 4</div>
                 </div>
 
-                <div class="selected-date">
-                    <i class="icon-calendar"></i>
+                <div class="selected-date-info">
+                    <i class="fas fa-calendar"></i>
                     ${formatDate(date)}
                 </div>
 
-                <div id="time-slots-container">
-                    <div class="loading-spinner">Загрузка доступного времени...</div>
+                <div class="time-slots-container" id="time-slots">
+                    <div class="loading">Загрузка доступных слотов...</div>
                 </div>
             </div>
         `;
@@ -199,60 +234,18 @@ export class BookingFlow {
         document.getElementById('app').innerHTML = html;
 
         // Загружаем доступные слоты
-        await this.loadTimeSlots();
-    }
-
-    /**
-     * Загрузка доступных временных слотов
-     */
-    async loadTimeSlots() {
         try {
-            const { master, service, date } = this.bookingData;
-            
-            const response = await this.api.getAvailableSlots(master.id, date, service.id);
-            const slots = response.available_slots;
+            const response = await this.api.getAvailableSlots(master.id, date);
+            const slots = response.available_slots || [];
 
-            if (slots.length === 0) {
-                document.getElementById('time-slots-container').innerHTML = `
-                    <div class="empty-state">
-                        <i class="icon-calendar-x"></i>
-                        <p>На эту дату нет свободного времени</p>
-                        <button class="btn-secondary" onclick="bookingFlow.prevStep()">
-                            Выбрать другую дату
-                        </button>
-                    </div>
-                `;
-                return;
-            }
-
-            const slotsHtml = slots.map(time => {
-                const [hours, minutes] = time.split(':');
-                const endTime = this.calculateEndTime(time, service.duration);
-                const isSelected = this.bookingData.time === time;
-
-                return `
-                    <div class="time-slot ${isSelected ? 'selected' : ''}" 
-                         data-time="${time}"
-                         onclick="bookingFlow.selectTime('${time}')">
-                        <div class="time-start">${time}</div>
-                        <div class="time-end">до ${endTime}</div>
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('time-slots-container').innerHTML = `
-                <div class="time-slots-grid">
-                    ${slotsHtml}
-                </div>
-            `;
-
+            this.renderTimeSlots(slots);
         } catch (error) {
             console.error('Ошибка загрузки слотов:', error);
-            document.getElementById('time-slots-container').innerHTML = `
-                <div class="error-state">
-                    <i class="icon-alert"></i>
-                    <p>Ошибка загрузки доступного времени</p>
-                    <button class="btn-secondary" onclick="bookingFlow.loadTimeSlots()">
+            document.getElementById('time-slots').innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Не удалось загрузить доступные слоты</p>
+                    <button class="btn-secondary" onclick="bookingFlow.renderStep3()">
                         Попробовать снова
                     </button>
                 </div>
@@ -261,85 +254,175 @@ export class BookingFlow {
     }
 
     /**
+     * Отрисовка временных слотов
+     */
+    renderTimeSlots(slots) {
+        const container = document.getElementById('time-slots');
+
+        if (slots.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>На выбранную дату нет свободных слотов</p>
+                    <button class="btn-secondary" onclick="bookingFlow.prevStep()">
+                        Выбрать другую дату
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // Группируем по времени суток
+        const morning = slots.filter(s => parseInt(s.split(':')[0]) < 12);
+        const afternoon = slots.filter(s => {
+            const hour = parseInt(s.split(':')[0]);
+            return hour >= 12 && hour < 18;
+        });
+        const evening = slots.filter(s => parseInt(s.split(':')[0]) >= 18);
+
+        let html = '';
+
+        if (morning.length > 0) {
+            html += `
+                <div class="time-group">
+                    <h4>Утро</h4>
+                    <div class="time-slots">
+                        ${morning.map(slot => `
+                            <button class="time-slot" onclick="bookingFlow.selectTime('${slot}')">
+                                ${slot}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        if (afternoon.length > 0) {
+            html += `
+                <div class="time-group">
+                    <h4>День</h4>
+                    <div class="time-slots">
+                        ${afternoon.map(slot => `
+                            <button class="time-slot" onclick="bookingFlow.selectTime('${slot}')">
+                                ${slot}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        if (evening.length > 0) {
+            html += `
+                <div class="time-group">
+                    <h4>Вечер</h4>
+                    <div class="time-slots">
+                        ${evening.map(slot => `
+                            <button class="time-slot" onclick="bookingFlow.selectTime('${slot}')">
+                                ${slot}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+    }
+
+    /**
      * Выбор времени
      */
     selectTime(time) {
         this.bookingData.time = time;
 
-        // Обновляем выделение
-        document.querySelectorAll('.time-slot').forEach(slot => {
-            slot.classList.remove('selected');
+        // Подсвечиваем выбранное время
+        document.querySelectorAll('.time-slot').forEach(btn => {
+            btn.classList.remove('selected');
         });
-        document.querySelector(`[data-time="${time}"]`).classList.add('selected');
+        event.target.classList.add('selected');
 
-        // Переходим к вводу контактов
-        setTimeout(() => this.nextStep(), 300);
+        // Переходим к контактной информации
+        setTimeout(() => {
+            this.nextStep();
+        }, 300);
     }
 
     /**
-     * ШАГ 4: Ввод контактных данных
+     * ШАГ 4: Контактная информация
      */
     renderStep4() {
-        const tg = window.Telegram?.WebApp;
-        const user = tg?.initDataUnsafe?.user;
+        const { master, service, date, time } = this.bookingData;
+        const endTime = this.calculateEndTime(time, service.duration);
 
-        // Автозаполнение имени из Telegram
-        if (user && !this.bookingData.clientName) {
-            this.bookingData.clientName = `${user.first_name} ${user.last_name || ''}`.trim();
+        // Получаем данные из Telegram если доступны
+        let userName = '';
+        let userPhone = '';
+
+        if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+            const user = window.Telegram.WebApp.initDataUnsafe.user;
+            userName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
         }
 
         const html = `
             <div class="booking-step" data-step="4">
                 <div class="booking-header">
                     <button class="back-btn" onclick="bookingFlow.prevStep()">
-                        <i class="icon-arrow-left"></i>
+                        <i class="fas fa-arrow-left"></i>
                     </button>
-                    <h2>Контактные данные</h2>
+                    <h2>Ваши контакты</h2>
                     <div class="step-indicator">Шаг 4 из 4</div>
                 </div>
 
-                <form id="contact-form" onsubmit="bookingFlow.submitBooking(event)">
+                <div class="booking-summary-mini">
+                    <div class="summary-row">
+                        <span>${master.name}</span>
+                        <span>•</span>
+                        <span>${service.name}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>${formatDate(date)}</span>
+                        <span>•</span>
+                        <span>${time} - ${endTime}</span>
+                    </div>
+                </div>
+
+                <form id="contact-form" class="contact-form">
                     <div class="form-group">
-                        <label for="client-name">Ваше имя *</label>
+                        <label for="client-name">
+                            <i class="fas fa-user"></i> Ваше имя *
+                        </label>
                         <input 
                             type="text" 
                             id="client-name" 
-                            name="clientName"
-                            value="${this.bookingData.clientName}"
+                            name="clientName" 
                             placeholder="Иван Иванов"
-                            required
-                        >
+                            value="${userName}"
+                            required>
                     </div>
 
                     <div class="form-group">
-                        <label for="client-phone">Телефон *</label>
+                        <label for="client-phone">
+                            <i class="fas fa-phone"></i> Телефон *
+                        </label>
                         <input 
                             type="tel" 
                             id="client-phone" 
-                            name="clientPhone"
-                            value="${this.bookingData.clientPhone}"
-                            placeholder="+7 (999) 123-45-67"
-                            pattern="\\+7\\s?\\(?\\d{3}\\)?\\s?\\d{3}-?\\d{2}-?\\d{2}"
-                            required
-                        >
-                        <small>Формат: +7 (999) 123-45-67</small>
+                            name="clientPhone" 
+                            placeholder="+7 (900) 123-45-67"
+                            value="${userPhone}"
+                            required>
                     </div>
 
                     <div class="form-group">
-                        <label for="comment">Комментарий (необязательно)</label>
+                        <label for="comment">
+                            <i class="fas fa-comment"></i> Комментарий (необязательно)
+                        </label>
                         <textarea 
                             id="comment" 
-                            name="comment"
-                            placeholder="Особые пожелания или вопросы"
-                            rows="3"
-                        >${this.bookingData.comment}</textarea>
-                    </div>
-
-                    <div class="form-group checkbox-group">
-                        <label>
-                            <input type="checkbox" name="notifications" checked>
-                            <span>Отправлять напоминания о записи</span>
-                        </label>
+                            name="comment" 
+                            placeholder="Дополнительные пожелания..."
+                            rows="3"></textarea>
                     </div>
 
                     <button type="submit" class="booking-action-btn">
@@ -351,50 +434,19 @@ export class BookingFlow {
 
         document.getElementById('app').innerHTML = html;
 
-        // Маска для телефона
-        this.setupPhoneMask();
-    }
-
-    /**
-     * Маска для ввода телефона
-     */
-    setupPhoneMask() {
-        const phoneInput = document.getElementById('client-phone');
-        
-        phoneInput.addEventListener('input', (e) => {
-            let value = e.target.value.replace(/\D/g, '');
-            
-            if (value.length > 0) {
-                if (value[0] !== '7') {
-                    value = '7' + value;
-                }
-                
-                let formatted = '+7';
-                if (value.length > 1) {
-                    formatted += ' (' + value.substring(1, 4);
-                }
-                if (value.length >= 5) {
-                    formatted += ') ' + value.substring(4, 7);
-                }
-                if (value.length >= 8) {
-                    formatted += '-' + value.substring(7, 9);
-                }
-                if (value.length >= 10) {
-                    formatted += '-' + value.substring(9, 11);
-                }
-                
-                e.target.value = formatted;
-            }
+        // Обработчик формы
+        document.getElementById('contact-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitContactForm(e.target);
         });
     }
 
     /**
-     * Отправка формы и переход к подтверждению
+     * Отправка формы контактов
      */
-    submitBooking(event) {
-        event.preventDefault();
-        
-        const formData = new FormData(event.target);
+    submitContactForm(form) {
+        const formData = new FormData(form);
+
         this.bookingData.clientName = formData.get('clientName');
         this.bookingData.clientPhone = formData.get('clientPhone');
         this.bookingData.comment = formData.get('comment');
@@ -413,7 +465,7 @@ export class BookingFlow {
             <div class="booking-step" data-step="5">
                 <div class="booking-header">
                     <button class="back-btn" onclick="bookingFlow.prevStep()">
-                        <i class="icon-arrow-left"></i>
+                        <i class="fas fa-arrow-left"></i>
                     </button>
                     <h2>Подтверждение записи</h2>
                 </div>
@@ -437,8 +489,8 @@ export class BookingFlow {
                         <div class="service-card-mini">
                             <strong>${service.name}</strong>
                             <div class="service-meta">
-                                <span><i class="icon-clock"></i> ${service.duration} мин</span>
-                                <span><i class="icon-ruble"></i> ${service.price} ₽</span>
+                                <span><i class="fas fa-clock"></i> ${service.duration} мин</span>
+                                <span><i class="fas fa-ruble-sign"></i> ${service.price} ₽</span>
                             </div>
                         </div>
                     </div>
@@ -446,17 +498,17 @@ export class BookingFlow {
                     <div class="confirmation-section">
                         <div class="section-title">Дата и время</div>
                         <div class="datetime-card">
-                            <div><i class="icon-calendar"></i> ${formatDate(date)}</div>
-                            <div><i class="icon-clock"></i> ${time} - ${endTime}</div>
+                            <div><i class="fas fa-calendar"></i> ${formatDate(date)}</div>
+                            <div><i class="fas fa-clock"></i> ${time} - ${endTime}</div>
                         </div>
                     </div>
 
                     <div class="confirmation-section">
                         <div class="section-title">Контакты</div>
                         <div class="contact-card">
-                            <div><i class="icon-user"></i> ${clientName}</div>
-                            <div><i class="icon-phone"></i> ${clientPhone}</div>
-                            ${comment ? `<div><i class="icon-message"></i> ${comment}</div>` : ''}
+                            <div><i class="fas fa-user"></i> ${clientName}</div>
+                            <div><i class="fas fa-phone"></i> ${clientPhone}</div>
+                            ${comment ? `<div><i class="fas fa-comment"></i> ${comment}</div>` : ''}
                         </div>
                     </div>
 
@@ -521,6 +573,8 @@ export class BookingFlow {
 
     /**
      * Экран успешной записи
+     * 
+     * ИСПРАВЛЕНО: Правильные пути навигации с '/'
      */
     showSuccessScreen(booking) {
         const { master, service, date, time } = this.bookingData;
@@ -529,7 +583,7 @@ export class BookingFlow {
         const html = `
             <div class="success-screen">
                 <div class="success-icon">
-                    <i class="icon-check-circle"></i>
+                    <i class="fas fa-check-circle"></i>
                 </div>
 
                 <h2>Запись успешно создана!</h2>
@@ -561,16 +615,16 @@ export class BookingFlow {
                 </div>
 
                 <div class="success-actions">
-                    <button class="btn-primary" onclick="router.navigate('bookings')">
+                    <button class="btn-primary" onclick="router.navigate('/bookings')">
                         Мои записи
                     </button>
-                    <button class="btn-secondary" onclick="router.navigate('home')">
+                    <button class="btn-secondary" onclick="router.navigate('/')">
                         На главную
                     </button>
                 </div>
 
                 <p class="reminder-text">
-                    <i class="icon-bell"></i>
+                    <i class="fas fa-bell"></i>
                     Мы отправим вам напоминание за 24 часа и за 1 час до визита
                 </p>
             </div>
