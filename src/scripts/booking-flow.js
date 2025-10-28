@@ -615,10 +615,10 @@ export class BookingFlow {
                 </div>
 
                 <div class="success-actions">
-                    <button class="btn-primary" onclick="router.navigate('/bookings')">
+                    <button class="btn-primary" onclick="window.router.navigate('/bookings')">
                         Мои записи
                     </button>
-                    <button class="btn-secondary" onclick="router.navigate('/')">
+                    <button class="btn-secondary" onclick="window.router.navigate('/')">
                         На главную
                     </button>
                 </div>
