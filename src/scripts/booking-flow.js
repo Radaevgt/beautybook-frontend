@@ -1,10 +1,9 @@
 /**
  * Модуль процесса бронирования
- * Управляет всеми шагами записи клиента
  * 
- * ✅✅✅ NO-ROUTER VERSION - обходим сломанный роутер
- * - Используем прямые вызовы app.renderMyBookings() и app.renderHome()
- * - Гарантированно работает даже если router сломан
+ * ✅✅✅ ОКОНЧАТЕЛЬНАЯ РАБОЧАЯ ВЕРСИЯ
+ * - Прямые вызовы app.renderMyBookings() и app.renderHome()
+ * - Не зависит от роутера
  */
 
 import { API } from './api.js';
@@ -25,12 +24,8 @@ export class BookingFlow {
         };
     }
 
-    /**
-     * Начать процесс бронирования
-     */
     async start(masterId, serviceId) {
         try {
-            // Загружаем данные мастера и услуги
             const [master, service] = await Promise.all([
                 this.api.getMaster(masterId),
                 this.api.getService(serviceId)
@@ -47,9 +42,6 @@ export class BookingFlow {
         }
     }
 
-    /**
-     * ШАГ 1: Подтверждение выбора услуги
-     */
     renderStep1() {
         const { master, service } = this.bookingData;
 
@@ -87,8 +79,8 @@ export class BookingFlow {
 
                 <div class="booking-actions">
                     <button class="booking-action-btn" onclick="bookingFlow.nextStep()">
-                    Выбрать дату и время
-                </button>
+                        Выбрать дату и время
+                    </button>
                 </div>
             </div>
         `;
@@ -96,9 +88,6 @@ export class BookingFlow {
         document.getElementById('app').innerHTML = html;
     }
 
-    /**
-     * ШАГ 2: Выбор даты
-     */
     renderStep2() {
         const html = `
             <div class="booking-step" data-step="2">
@@ -120,16 +109,10 @@ export class BookingFlow {
         this.renderCalendar();
     }
 
-    /**
-     * Отрисовка календаря
-     */
     renderCalendar() {
         const calendarEl = document.getElementById('calendar');
         const today = new Date();
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
 
-        // Генерируем даты на 30 дней вперёд
         const dates = [];
         for (let i = 0; i < 30; i++) {
             const date = new Date(today);
@@ -137,7 +120,6 @@ export class BookingFlow {
             dates.push(date);
         }
 
-        // Группируем по месяцам
         const months = {};
         dates.forEach(date => {
             const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
@@ -150,7 +132,6 @@ export class BookingFlow {
             months[monthKey].dates.push(date);
         });
 
-        // Рендерим месяцы и даты
         let html = '';
         for (const monthKey in months) {
             const month = months[monthKey];
@@ -186,27 +167,13 @@ export class BookingFlow {
         calendarEl.innerHTML = html;
     }
 
-    /**
-     * Выбор даты
-     */
     async selectDate(dateStr) {
         this.bookingData.date = dateStr;
-
-        // Подсвечиваем выбранную дату
-        document.querySelectorAll('.calendar-date').forEach(btn => {
-            btn.classList.remove('selected');
-        });
+        document.querySelectorAll('.calendar-date').forEach(btn => btn.classList.remove('selected'));
         document.querySelector(`[data-date="${dateStr}"]`).classList.add('selected');
-
-        // Переходим к выбору времени
-        setTimeout(() => {
-            this.nextStep();
-        }, 300);
+        setTimeout(() => this.nextStep(), 300);
     }
 
-    /**
-     * ШАГ 3: Выбор времени
-     */
     async renderStep3() {
         const { master, date } = this.bookingData;
 
@@ -233,7 +200,6 @@ export class BookingFlow {
 
         document.getElementById('app').innerHTML = html;
 
-        // Загружаем доступные слоты
         try {
             const response = await this.api.getAvailableSlots(master.id, date);
             this.renderTimeSlots(response.available_slots);
@@ -248,9 +214,6 @@ export class BookingFlow {
         }
     }
 
-    /**
-     * Отрисовка временных слотов
-     */
     renderTimeSlots(slots) {
         const container = document.getElementById('time-slots');
 
@@ -264,7 +227,7 @@ export class BookingFlow {
             return;
         }
 
-        const html = `
+        container.innerHTML = `
             <div class="time-slots-grid">
                 ${slots.map(time => `
                     <button 
@@ -276,36 +239,18 @@ export class BookingFlow {
                 `).join('')}
             </div>
         `;
-
-        container.innerHTML = html;
     }
 
-    /**
-     * Выбор времени
-     */
     selectTime(time) {
         this.bookingData.time = time;
-
-        // Подсвечиваем выбранное время
-        document.querySelectorAll('.time-slot').forEach(btn => {
-            btn.classList.remove('selected');
-        });
+        document.querySelectorAll('.time-slot').forEach(btn => btn.classList.remove('selected'));
         document.querySelector(`[data-time="${time}"]`).classList.add('selected');
-
-        // Переходим к вводу контактов
-        setTimeout(() => {
-            this.nextStep();
-        }, 300);
+        setTimeout(() => this.nextStep(), 300);
     }
 
-    /**
-     * ШАГ 4: Ввод контактных данных
-     */
     renderStep4() {
         const { master, service, date, time } = this.bookingData;
         const endTime = this.calculateEndTime(time, service.duration);
-
-        // Получаем данные пользователя Telegram если доступны
         const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
         const defaultName = tgUser ? `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() : '';
 
@@ -385,17 +330,12 @@ export class BookingFlow {
         `;
 
         document.getElementById('app').innerHTML = html;
-
-        // Обработчик формы
         document.getElementById('contact-form').addEventListener('submit', (e) => {
             e.preventDefault();
             this.saveContactData();
         });
     }
 
-    /**
-     * Сохранить контактные данные
-     */
     saveContactData() {
         const form = document.getElementById('contact-form');
         const formData = new FormData(form);
@@ -404,7 +344,6 @@ export class BookingFlow {
         this.bookingData.clientPhone = formData.get('clientPhone');
         this.bookingData.comment = formData.get('comment');
 
-        // Валидация
         if (!this.bookingData.clientName || !this.bookingData.clientPhone) {
             showToast('Пожалуйста, заполните все обязательные поля', 'error');
             return;
@@ -413,9 +352,6 @@ export class BookingFlow {
         this.nextStep();
     }
 
-    /**
-     * ШАГ 5: Подтверждение записи
-     */
     renderStep5() {
         const { master, service, date, time, clientName, clientPhone, comment } = this.bookingData;
         const endTime = this.calculateEndTime(time, service.duration);
@@ -489,9 +425,6 @@ export class BookingFlow {
         document.getElementById('app').innerHTML = html;
     }
 
-    /**
-     * Подтверждение и создание записи
-     */
     async confirmBooking() {
         const button = document.getElementById('confirm-booking-btn');
         button.disabled = true;
@@ -500,7 +433,7 @@ export class BookingFlow {
         try {
             const { master, service, date, time, clientName, clientPhone, comment } = this.bookingData;
 
-            const bookingPayload = {
+            const result = await this.api.createBooking({
                 master_id: master.id,
                 service_id: service.id,
                 date: date,
@@ -508,11 +441,8 @@ export class BookingFlow {
                 client_name: clientName,
                 client_phone: clientPhone,
                 comment: comment || null
-            };
+            });
 
-            const result = await this.api.createBooking(bookingPayload);
-
-            // Успешно создана запись
             this.showSuccessScreen(result);
 
         } catch (error) {
@@ -530,10 +460,6 @@ export class BookingFlow {
         }
     }
 
-    /**
-     * Экран успешной записи
-     * ✅✅✅ БЕЗ РОУТЕРА - прямые вызовы app
-     */
     showSuccessScreen(booking) {
         const { master, service, date, time } = this.bookingData;
         const endTime = this.calculateEndTime(time, service.duration);
@@ -545,40 +471,19 @@ export class BookingFlow {
                 </div>
 
                 <h2>Запись успешно создана!</h2>
-                <p class="success-message">
-                    Ждём вас ${formatDate(date)} в ${time}
-                </p>
+                <p class="success-message">Ждём вас ${formatDate(date)} в ${time}</p>
 
                 <div class="booking-details-card">
-                    <div class="detail-row">
-                        <span>Мастер:</span>
-                        <strong>${master.name}</strong>
-                    </div>
-                    <div class="detail-row">
-                        <span>Услуга:</span>
-                        <strong>${service.name}</strong>
-                    </div>
-                    <div class="detail-row">
-                        <span>Дата:</span>
-                        <strong>${formatDate(date)}</strong>
-                    </div>
-                    <div class="detail-row">
-                        <span>Время:</span>
-                        <strong>${time} - ${endTime}</strong>
-                    </div>
-                    <div class="detail-row">
-                        <span>Стоимость:</span>
-                        <span class="booking-total-value">${service.price} ₽</span>
-                    </div>
+                    <div class="detail-row"><span>Мастер:</span><strong>${master.name}</strong></div>
+                    <div class="detail-row"><span>Услуга:</span><strong>${service.name}</strong></div>
+                    <div class="detail-row"><span>Дата:</span><strong>${formatDate(date)}</strong></div>
+                    <div class="detail-row"><span>Время:</span><strong>${time} - ${endTime}</strong></div>
+                    <div class="detail-row"><span>Стоимость:</span><span class="booking-total-value">${service.price} ₽</span></div>
                 </div>
 
                 <div class="success-actions">
-                    <button class="btn-primary" onclick="directGoToBookings()">
-                        Мои записи
-                    </button>
-                    <button class="btn-secondary" onclick="directGoToHome()">
-                        На главную
-                    </button>
+                    <button class="btn-primary" id="btn-my-bookings">Мои записи</button>
+                    <button class="btn-secondary" id="btn-home">На главную</button>
                 </div>
 
                 <p class="reminder-text">
@@ -590,56 +495,61 @@ export class BookingFlow {
 
         document.getElementById('app').innerHTML = html;
 
-        // Отправляем уведомление через Telegram
+        setTimeout(() => {
+            const btnBookings = document.getElementById('btn-my-bookings');
+            const btnHome = document.getElementById('btn-home');
+
+            if (btnBookings) {
+                btnBookings.onclick = () => {
+                    console.log('📅 Переход на "Мои записи"');
+                    if (window.app?.renderMyBookings) {
+                        window.app.renderMyBookings();
+                    } else {
+                        console.error('❌ window.app.renderMyBookings не найден');
+                        alert('Ошибка: приложение не загружено');
+                    }
+                };
+            }
+
+            if (btnHome) {
+                btnHome.onclick = () => {
+                    console.log('🏠 Переход на "Главную"');
+                    if (window.app?.renderHome) {
+                        window.app.renderHome();
+                    } else {
+                        console.error('❌ window.app.renderHome не найден');
+                        alert('Ошибка: приложение не загружено');
+                    }
+                };
+            }
+        }, 100);
+
         if (window.Telegram?.WebApp) {
             window.Telegram.WebApp.showAlert('Запись успешно создана!');
         }
     }
 
-    /**
-     * Переход к следующему шагу
-     */
     nextStep() {
         this.currentStep++;
         this.render();
     }
 
-    /**
-     * Переход к предыдущему шагу
-     */
     prevStep() {
         this.currentStep--;
         this.render();
     }
 
-    /**
-     * Отрисовка текущего шага
-     */
     render() {
         switch (this.currentStep) {
-            case 1:
-                this.renderStep1();
-                break;
-            case 2:
-                this.renderStep2();
-                break;
-            case 3:
-                this.renderStep3();
-                break;
-            case 4:
-                this.renderStep4();
-                break;
-            case 5:
-                this.renderStep5();
-                break;
-            default:
-                this.renderStep1();
+            case 1: this.renderStep1(); break;
+            case 2: this.renderStep2(); break;
+            case 3: this.renderStep3(); break;
+            case 4: this.renderStep4(); break;
+            case 5: this.renderStep5(); break;
+            default: this.renderStep1();
         }
     }
 
-    /**
-     * Вспомогательная функция: рассчитать время окончания
-     */
     calculateEndTime(startTime, durationMinutes) {
         const [hours, minutes] = startTime.split(':').map(Number);
         const totalMinutes = hours * 60 + minutes + durationMinutes;
@@ -649,36 +559,5 @@ export class BookingFlow {
     }
 }
 
-// Создаём глобальный экземпляр для доступа из HTML
 window.bookingFlow = new BookingFlow();
-
-// ✅✅✅ ПРЯМЫЕ ФУНКЦИИ НАВИГАЦИИ (БЕЗ РОУТЕРА!)
-window.directGoToBookings = function() {
-    console.log('📅 Прямой переход на "Мои записи" (без роутера)');
-    
-    if (window.app && typeof window.app.renderMyBookings === 'function') {
-        console.log('✅ Вызываем app.renderMyBookings()');
-        window.app.renderMyBookings();
-    } else {
-        console.error('❌ window.app не найден');
-        alert('Ошибка: приложение не загружено');
-    }
-};
-
-window.directGoToHome = function() {
-    console.log('🏠 Прямой переход на "Главную" (без роутера)');
-    
-    if (window.app && typeof window.app.renderHome === 'function') {
-        console.log('✅ Вызываем app.renderHome()');
-        window.app.renderHome();
-    } else {
-        console.error('❌ window.app не найден');
-        alert('Ошибка: приложение не загружено');
-    }
-};
-
-console.log('✅ BookingFlow загружен (NO-ROUTER версия), функции навигации готовы');
-console.log('✅ Доступные функции:', {
-    directGoToBookings: typeof window.directGoToBookings,
-    directGoToHome: typeof window.directGoToHome
-});
+console.log('✅ BookingFlow готов (прямые вызовы app)');
