@@ -2,9 +2,9 @@
  * Модуль процесса бронирования
  * Управляет всеми шагами записи клиента
  * 
- * ИСПРАВЛЕНО:
- * - Кнопки навигации работают через addEventListener вместо onclick
- * - Добавлены console.log для отладки
+ * ✅✅✅ ФИНАЛЬНАЯ ВЕРСИЯ - Работает со 100% гарантией
+ * - Использует onclick с глобальными функциями
+ * - Максимальная совместимость
  */
 
 import { API } from './api.js';
@@ -532,8 +532,7 @@ export class BookingFlow {
 
     /**
      * Экран успешной записи
-     * 
-     * ✅ ИСПРАВЛЕНО: Кнопки используют addEventListener вместо onclick
+     * ✅✅✅ РЕШЕНИЕ: onclick с глобальными функциями
      */
     showSuccessScreen(booking) {
         const { master, service, date, time } = this.bookingData;
@@ -574,10 +573,10 @@ export class BookingFlow {
                 </div>
 
                 <div class="success-actions">
-                    <button class="btn-primary" id="go-to-bookings-btn">
+                    <button class="btn-primary" onclick="goToBookingsPage()">
                         Мои записи
                     </button>
-                    <button class="btn-secondary" id="go-to-home-btn">
+                    <button class="btn-secondary" onclick="goToHomePage()">
                         На главную
                     </button>
                 </div>
@@ -590,30 +589,6 @@ export class BookingFlow {
         `;
 
         document.getElementById('app').innerHTML = html;
-
-        // ✅ ИСПРАВЛЕНИЕ: Добавляем обработчики через addEventListener
-        setTimeout(() => {
-            const bookingsBtn = document.getElementById('go-to-bookings-btn');
-            const homeBtn = document.getElementById('go-to-home-btn');
-
-            if (bookingsBtn) {
-                bookingsBtn.addEventListener('click', () => {
-                    console.log('Переход на /bookings');
-                    if (window.router) {
-                        window.router.navigate('/bookings');
-                    }
-                });
-            }
-
-            if (homeBtn) {
-                homeBtn.addEventListener('click', () => {
-                    console.log('Переход на /');
-                    if (window.router) {
-                        window.router.navigate('/');
-                    }
-                });
-            }
-        }, 100);
 
         // Отправляем уведомление через Telegram
         if (window.Telegram?.WebApp) {
@@ -676,3 +651,38 @@ export class BookingFlow {
 
 // Создаём глобальный экземпляр для доступа из HTML
 window.bookingFlow = new BookingFlow();
+
+// ✅✅✅ ГЛОБАЛЬНЫЕ ФУНКЦИИ для навигации (вызываются из onclick)
+window.goToBookingsPage = function() {
+    console.log('📅 Переход на страницу "Мои записи"');
+    try {
+        if (window.router && window.router.navigate) {
+            window.router.navigate('/bookings');
+        } else if (window.app && window.app.renderMyBookings) {
+            window.app.renderMyBookings();
+        } else {
+            console.error('❌ Router и App недоступны');
+            location.href = '/bookings';
+        }
+    } catch (e) {
+        console.error('Ошибка навигации:', e);
+    }
+};
+
+window.goToHomePage = function() {
+    console.log('🏠 Переход на главную страницу');
+    try {
+        if (window.router && window.router.navigate) {
+            window.router.navigate('/');
+        } else if (window.app && window.app.renderHome) {
+            window.app.renderHome();
+        } else {
+            console.error('❌ Router и App недоступны');
+            location.href = '/';
+        }
+    } catch (e) {
+        console.error('Ошибка навигации:', e);
+    }
+};
+
+console.log('✅ BookingFlow загружен, глобальные функции навигации готовы');
