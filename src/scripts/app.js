@@ -1,11 +1,16 @@
 /**
  * Главный файл приложения BeautyBook
+ * 
+ * ✅ ИСПРАВЛЕНО:
+ * - Убрана вкладка "Завершённые записи"
+ * - Показываются только предстоящие записи (status='confirmed' + дата в будущем)
+ * - Плавное удаление карточки при отмене записи
  */
 
 import { API } from './api.js';
 import { router } from './router.js';
 import { telegramApp } from './telegram.js';
-import { showLoading, hideLoading, formatDate, formatTime, formatPrice } from './utils.js';
+import { showLoading, hideLoading, formatDate, formatTime, formatPrice, showToast } from './utils.js';
 
 class App {
     constructor() {
@@ -314,7 +319,7 @@ class App {
                 </div>
             `;
             
-            // ✅ ГЛАВНОЕ ИЗМЕНЕНИЕ: Добавляем обработчики для кнопок "Записаться"
+            // Добавляем обработчики для кнопок "Записаться"
             document.querySelectorAll('.book-service-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -350,23 +355,30 @@ class App {
     
     /**
      * Отобразить мои записи
+     * 
+     * ✅ ИСПРАВЛЕНО:
+     * - Убраны завершённые записи
+     * - Показываются только предстоящие (confirmed + дата в будущем)
+     * - Нет вкладок, только один список
      */
     async renderMyBookings() {
         showLoading();
         
         try {
-            const bookings = await this.api.getMyBookings();
-            this.state.bookings = bookings;
+            const allBookings = await this.api.getMyBookings();
+            this.state.bookings = allBookings;
+            
+            const now = new Date();
+            
+            // ✅ ФИЛЬТРУЕМ: только подтверждённые + дата в будущем
+            const upcomingBookings = allBookings.filter(b => {
+                const bookingDateTime = new Date(`${b.date}T${b.time_start}`);
+                return b.status === 'confirmed' && bookingDateTime > now;
+            });
+            
+            console.log(`📅 Всего записей: ${allBookings.length}, предстоящих: ${upcomingBookings.length}`);
             
             const app = document.getElementById('app');
-            
-            // Разделяем на предстоящие и завершенные
-            const upcoming = bookings.filter(b => 
-                b.status === 'confirmed' && new Date(`${b.date}T${b.time_start}`) > new Date()
-            );
-            const past = bookings.filter(b => 
-                b.status === 'completed' || new Date(`${b.date}T${b.time_start}`) <= new Date()
-            );
             
             app.innerHTML = `
                 <div class="page">
@@ -375,46 +387,18 @@ class App {
                     </div>
                     
                     <div class="content">
-                        ${upcoming.length === 0 && past.length === 0 ? `
+                        ${upcomingBookings.length === 0 ? `
                             <div class="empty-state">
                                 <i class="fas fa-calendar-times"></i>
-                                <p>У вас пока нет записей</p>
+                                <h3>У вас нет предстоящих записей</h3>
+                                <p>Выберите мастера и услугу, чтобы записаться</p>
                                 <button class="btn btn-primary" data-nav-route="/masters">
                                     Записаться
                                 </button>
                             </div>
                         ` : `
-                            <div class="bookings-tabs">
-                                <button class="tab active" data-tab="upcoming">
-                                    Предстоящие (${upcoming.length})
-                                </button>
-                                <button class="tab" data-tab="past">
-                                    Завершённые (${past.length})
-                                </button>
-                            </div>
-                            
-                            <div class="tab-content active" data-content="upcoming">
-                                ${upcoming.length === 0 ? `
-                                    <div class="empty-state">
-                                        <p>Нет предстоящих записей</p>
-                                    </div>
-                                ` : `
-                                    <div class="bookings-list">
-                                        ${upcoming.map(booking => this.renderBookingCard(booking)).join('')}
-                                    </div>
-                                `}
-                            </div>
-                            
-                            <div class="tab-content" data-content="past">
-                                ${past.length === 0 ? `
-                                    <div class="empty-state">
-                                        <p>Нет завершённых записей</p>
-                                    </div>
-                                ` : `
-                                    <div class="bookings-list">
-                                        ${past.map(booking => this.renderBookingCard(booking)).join('')}
-                                    </div>
-                                `}
+                            <div class="bookings-list">
+                                ${upcomingBookings.map(booking => this.renderBookingCard(booking)).join('')}
                             </div>
                         `}
                     </div>
@@ -422,20 +406,6 @@ class App {
                     ${this.renderBottomNav('bookings')}
                 </div>
             `;
-            
-            // Обработчики табов
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabName = tab.getAttribute('data-tab');
-                    
-                    // Переключаем активные табы
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    
-                    tab.classList.add('active');
-                    document.querySelector(`[data-content="${tabName}"]`).classList.add('active');
-                });
-            });
             
             // Обработчик кнопки "Записаться" в empty state
             const navBtn = document.querySelector('[data-nav-route]');
@@ -457,10 +427,8 @@ class App {
      * Отрисовать карточку записи
      */
     renderBookingCard(booking) {
-        const isFuture = new Date(`${booking.date}T${booking.time_start}`) > new Date();
-        
         return `
-            <div class="booking-card status-${booking.status}">
+            <div class="booking-card status-${booking.status}" data-booking-id="${booking.id}">
                 <div class="booking-header">
                     <span class="booking-date">${formatDate(booking.date)}</span>
                     <span class="booking-status ${booking.status}">
@@ -491,13 +459,11 @@ class App {
                     </div>
                 </div>
                 
-                ${isFuture && booking.status === 'confirmed' ? `
-                    <div class="booking-actions">
-                        <button class="btn-danger" onclick="window.app.cancelBooking(${booking.id})">
-                            Отменить
-                        </button>
-                    </div>
-                ` : ''}
+                <div class="booking-actions">
+                    <button class="btn-danger" onclick="window.app.cancelBooking(${booking.id})">
+                        Отменить запись
+                    </button>
+                </div>
             </div>
         `;
     }
@@ -517,6 +483,8 @@ class App {
     
     /**
      * Отменить бронирование
+     * 
+     * ✅ ИСПРАВЛЕНО: Плавное удаление карточки из DOM
      */
     async cancelBooking(bookingId) {
         if (!confirm('Вы уверены что хотите отменить запись?')) {
@@ -524,15 +492,48 @@ class App {
         }
         
         try {
-            showLoading();
+            // Находим карточку для анимации
+            const card = document.querySelector(`[data-booking-id="${bookingId}"]`);
+            
+            // Показываем индикатор загрузки
+            if (card) {
+                card.style.opacity = '0.5';
+                card.style.pointerEvents = 'none';
+            }
+            
+            // Отправляем запрос на отмену
             await this.api.cancelBooking(bookingId);
+            
+            // ✅ Плавно удаляем карточку
+            if (card) {
+                card.style.transition = 'all 0.3s ease';
+                card.style.transform = 'translateX(-100%)';
+                card.style.opacity = '0';
+                
+                setTimeout(() => {
+                    card.remove();
+                    
+                    // Проверяем, остались ли ещё записи
+                    const remainingCards = document.querySelectorAll('.booking-card');
+                    if (remainingCards.length === 0) {
+                        // Перезагружаем страницу, чтобы показать empty state
+                        this.renderMyBookings();
+                    }
+                }, 300);
+            }
+            
             showToast('Запись успешно отменена', 'success');
-            await this.renderMyBookings();
+            
         } catch (error) {
             console.error('Ошибка отмены записи:', error);
-            showToast('Ошибка отмены записи', 'error');
-        } finally {
-            hideLoading();
+            showToast('Ошибка отмены записи. Попробуйте снова', 'error');
+            
+            // Восстанавливаем карточку при ошибке
+            const card = document.querySelector(`[data-booking-id="${bookingId}"]`);
+            if (card) {
+                card.style.opacity = '1';
+                card.style.pointerEvents = 'auto';
+            }
         }
     }
     
