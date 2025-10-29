@@ -2,9 +2,9 @@
  * Модуль процесса бронирования
  * Управляет всеми шагами записи клиента
  * 
- * ✅✅✅ ФИНАЛЬНАЯ ВЕРСИЯ - Работает со 100% гарантией
- * - Использует onclick с глобальными функциями
- * - Максимальная совместимость
+ * ✅✅✅ NO-ROUTER VERSION - обходим сломанный роутер
+ * - Используем прямые вызовы app.renderMyBookings() и app.renderHome()
+ * - Гарантированно работает даже если router сломан
  */
 
 import { API } from './api.js';
@@ -532,7 +532,7 @@ export class BookingFlow {
 
     /**
      * Экран успешной записи
-     * ✅✅✅ РЕШЕНИЕ: onclick с глобальными функциями
+     * ✅✅✅ БЕЗ РОУТЕРА - прямые вызовы app
      */
     showSuccessScreen(booking) {
         const { master, service, date, time } = this.bookingData;
@@ -573,10 +573,10 @@ export class BookingFlow {
                 </div>
 
                 <div class="success-actions">
-                    <button class="btn-primary" onclick="goToBookingsPage()">
+                    <button class="btn-primary" onclick="directGoToBookings()">
                         Мои записи
                     </button>
-                    <button class="btn-secondary" onclick="goToHomePage()">
+                    <button class="btn-secondary" onclick="directGoToHome()">
                         На главную
                     </button>
                 </div>
@@ -652,37 +652,33 @@ export class BookingFlow {
 // Создаём глобальный экземпляр для доступа из HTML
 window.bookingFlow = new BookingFlow();
 
-// ✅✅✅ ГЛОБАЛЬНЫЕ ФУНКЦИИ для навигации (вызываются из onclick)
-window.goToBookingsPage = function() {
-    console.log('📅 Переход на страницу "Мои записи"');
-    try {
-        if (window.router && window.router.navigate) {
-            window.router.navigate('/bookings');
-        } else if (window.app && window.app.renderMyBookings) {
-            window.app.renderMyBookings();
-        } else {
-            console.error('❌ Router и App недоступны');
-            location.href = '/bookings';
-        }
-    } catch (e) {
-        console.error('Ошибка навигации:', e);
+// ✅✅✅ ПРЯМЫЕ ФУНКЦИИ НАВИГАЦИИ (БЕЗ РОУТЕРА!)
+window.directGoToBookings = function() {
+    console.log('📅 Прямой переход на "Мои записи" (без роутера)');
+    
+    if (window.app && typeof window.app.renderMyBookings === 'function') {
+        console.log('✅ Вызываем app.renderMyBookings()');
+        window.app.renderMyBookings();
+    } else {
+        console.error('❌ window.app не найден');
+        alert('Ошибка: приложение не загружено');
     }
 };
 
-window.goToHomePage = function() {
-    console.log('🏠 Переход на главную страницу');
-    try {
-        if (window.router && window.router.navigate) {
-            window.router.navigate('/');
-        } else if (window.app && window.app.renderHome) {
-            window.app.renderHome();
-        } else {
-            console.error('❌ Router и App недоступны');
-            location.href = '/';
-        }
-    } catch (e) {
-        console.error('Ошибка навигации:', e);
+window.directGoToHome = function() {
+    console.log('🏠 Прямой переход на "Главную" (без роутера)');
+    
+    if (window.app && typeof window.app.renderHome === 'function') {
+        console.log('✅ Вызываем app.renderHome()');
+        window.app.renderHome();
+    } else {
+        console.error('❌ window.app не найден');
+        alert('Ошибка: приложение не загружено');
     }
 };
 
-console.log('✅ BookingFlow загружен, глобальные функции навигации готовы');
+console.log('✅ BookingFlow загружен (NO-ROUTER версия), функции навигации готовы');
+console.log('✅ Доступные функции:', {
+    directGoToBookings: typeof window.directGoToBookings,
+    directGoToHome: typeof window.directGoToHome
+});
