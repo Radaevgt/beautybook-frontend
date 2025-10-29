@@ -3,8 +3,8 @@
  * Управляет всеми шагами записи клиента
  * 
  * ИСПРАВЛЕНО:
- * - Навигация: router.navigate('/bookings') и router.navigate('/')
- * - Импорт из существующего utils.js
+ * - Кнопки навигации работают через addEventListener вместо onclick
+ * - Добавлены console.log для отладки
  */
 
 import { API } from './api.js';
@@ -236,18 +236,13 @@ export class BookingFlow {
         // Загружаем доступные слоты
         try {
             const response = await this.api.getAvailableSlots(master.id, date);
-            const slots = response.available_slots || [];
-
-            this.renderTimeSlots(slots);
+            this.renderTimeSlots(response.available_slots);
         } catch (error) {
             console.error('Ошибка загрузки слотов:', error);
             document.getElementById('time-slots').innerHTML = `
                 <div class="error-message">
                     <i class="fas fa-exclamation-circle"></i>
                     <p>Не удалось загрузить доступные слоты</p>
-                    <button class="btn-secondary" onclick="bookingFlow.renderStep3()">
-                        Попробовать снова
-                    </button>
                 </div>
             `;
         }
@@ -261,71 +256,26 @@ export class BookingFlow {
 
         if (slots.length === 0) {
             container.innerHTML = `
-                <div class="empty-state">
+                <div class="empty-message">
                     <i class="fas fa-calendar-times"></i>
-                    <p>На выбранную дату нет свободных слотов</p>
-                    <button class="btn-secondary" onclick="bookingFlow.prevStep()">
-                        Выбрать другую дату
-                    </button>
+                    <p>На выбранную дату нет доступных слотов</p>
                 </div>
             `;
             return;
         }
 
-        // Группируем по времени суток
-        const morning = slots.filter(s => parseInt(s.split(':')[0]) < 12);
-        const afternoon = slots.filter(s => {
-            const hour = parseInt(s.split(':')[0]);
-            return hour >= 12 && hour < 18;
-        });
-        const evening = slots.filter(s => parseInt(s.split(':')[0]) >= 18);
-
-        let html = '';
-
-        if (morning.length > 0) {
-            html += `
-                <div class="time-group">
-                    <h4>Утро</h4>
-                    <div class="time-slots">
-                        ${morning.map(slot => `
-                            <button class="time-slot" onclick="bookingFlow.selectTime('${slot}')">
-                                ${slot}
-                            </button>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        if (afternoon.length > 0) {
-            html += `
-                <div class="time-group">
-                    <h4>День</h4>
-                    <div class="time-slots">
-                        ${afternoon.map(slot => `
-                            <button class="time-slot" onclick="bookingFlow.selectTime('${slot}')">
-                                ${slot}
-                            </button>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        if (evening.length > 0) {
-            html += `
-                <div class="time-group">
-                    <h4>Вечер</h4>
-                    <div class="time-slots">
-                        ${evening.map(slot => `
-                            <button class="time-slot" onclick="bookingFlow.selectTime('${slot}')">
-                                ${slot}
-                            </button>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
+        const html = `
+            <div class="time-slots-grid">
+                ${slots.map(time => `
+                    <button 
+                        class="time-slot" 
+                        data-time="${time}"
+                        onclick="bookingFlow.selectTime('${time}')">
+                        ${time}
+                    </button>
+                `).join('')}
+            </div>
+        `;
 
         container.innerHTML = html;
     }
@@ -340,29 +290,24 @@ export class BookingFlow {
         document.querySelectorAll('.time-slot').forEach(btn => {
             btn.classList.remove('selected');
         });
-        event.target.classList.add('selected');
+        document.querySelector(`[data-time="${time}"]`).classList.add('selected');
 
-        // Переходим к контактной информации
+        // Переходим к вводу контактов
         setTimeout(() => {
             this.nextStep();
         }, 300);
     }
 
     /**
-     * ШАГ 4: Контактная информация
+     * ШАГ 4: Ввод контактных данных
      */
     renderStep4() {
         const { master, service, date, time } = this.bookingData;
         const endTime = this.calculateEndTime(time, service.duration);
 
-        // Получаем данные из Telegram если доступны
-        let userName = '';
-        let userPhone = '';
-
-        if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
-            const user = window.Telegram.WebApp.initDataUnsafe.user;
-            userName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-        }
+        // Получаем данные пользователя Telegram если доступны
+        const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        const defaultName = tgUser ? `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() : '';
 
         const html = `
             <div class="booking-step" data-step="4">
@@ -370,63 +315,70 @@ export class BookingFlow {
                     <button class="back-btn" onclick="bookingFlow.prevStep()">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <h2>Ваши контакты</h2>
+                    <h2>Контактные данные</h2>
                     <div class="step-indicator">Шаг 4 из 4</div>
                 </div>
 
-                <div class="booking-summary-mini">
+                <div class="booking-summary-small">
                     <div class="summary-row">
-                        <span>${master.name}</span>
-                        <span>•</span>
-                        <span>${service.name}</span>
+                        <span>Мастер:</span>
+                        <strong>${master.name}</strong>
                     </div>
                     <div class="summary-row">
-                        <span>${formatDate(date)}</span>
-                        <span>•</span>
-                        <span>${time} - ${endTime}</span>
+                        <span>Услуга:</span>
+                        <strong>${service.name}</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Дата и время:</span>
+                        <strong>${formatDate(date)}, ${time} - ${endTime}</strong>
                     </div>
                 </div>
 
                 <form id="contact-form" class="contact-form">
                     <div class="form-group">
                         <label for="client-name">
-                            <i class="fas fa-user"></i> Ваше имя *
+                            <i class="fas fa-user"></i>
+                            Ваше имя *
                         </label>
                         <input 
                             type="text" 
                             id="client-name" 
                             name="clientName" 
                             placeholder="Иван Иванов"
-                            value="${userName}"
-                            required>
+                            value="${defaultName}"
+                            required
+                        >
                     </div>
 
                     <div class="form-group">
                         <label for="client-phone">
-                            <i class="fas fa-phone"></i> Телефон *
+                            <i class="fas fa-phone"></i>
+                            Телефон *
                         </label>
                         <input 
                             type="tel" 
                             id="client-phone" 
                             name="clientPhone" 
-                            placeholder="+7 (900) 123-45-67"
-                            value="${userPhone}"
-                            required>
+                            placeholder="+7 (999) 123-45-67"
+                            required
+                        >
                     </div>
 
                     <div class="form-group">
-                        <label for="comment">
-                            <i class="fas fa-comment"></i> Комментарий (необязательно)
+                        <label for="client-comment">
+                            <i class="fas fa-comment"></i>
+                            Комментарий (необязательно)
                         </label>
                         <textarea 
-                            id="comment" 
+                            id="client-comment" 
                             name="comment" 
                             placeholder="Дополнительные пожелания..."
-                            rows="3"></textarea>
+                            rows="3"
+                        ></textarea>
                     </div>
 
                     <button type="submit" class="booking-action-btn">
-                        Продолжить
+                        Далее
                     </button>
                 </form>
             </div>
@@ -437,25 +389,32 @@ export class BookingFlow {
         // Обработчик формы
         document.getElementById('contact-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            this.submitContactForm(e.target);
+            this.saveContactData();
         });
     }
 
     /**
-     * Отправка формы контактов
+     * Сохранить контактные данные
      */
-    submitContactForm(form) {
+    saveContactData() {
+        const form = document.getElementById('contact-form');
         const formData = new FormData(form);
 
         this.bookingData.clientName = formData.get('clientName');
         this.bookingData.clientPhone = formData.get('clientPhone');
         this.bookingData.comment = formData.get('comment');
-        
+
+        // Валидация
+        if (!this.bookingData.clientName || !this.bookingData.clientPhone) {
+            showToast('Пожалуйста, заполните все обязательные поля', 'error');
+            return;
+        }
+
         this.nextStep();
     }
 
     /**
-     * ШАГ 5: Финальное подтверждение
+     * ШАГ 5: Подтверждение записи
      */
     renderStep5() {
         const { master, service, date, time, clientName, clientPhone, comment } = this.bookingData;
@@ -574,7 +533,7 @@ export class BookingFlow {
     /**
      * Экран успешной записи
      * 
-     * ИСПРАВЛЕНО: Правильные пути навигации с '/'
+     * ✅ ИСПРАВЛЕНО: Кнопки используют addEventListener вместо onclick
      */
     showSuccessScreen(booking) {
         const { master, service, date, time } = this.bookingData;
@@ -615,10 +574,10 @@ export class BookingFlow {
                 </div>
 
                 <div class="success-actions">
-                    <button class="btn-primary" onclick="window.router.navigate('/bookings')">
+                    <button class="btn-primary" id="go-to-bookings-btn">
                         Мои записи
                     </button>
-                    <button class="btn-secondary" onclick="window.router.navigate('/')">
+                    <button class="btn-secondary" id="go-to-home-btn">
                         На главную
                     </button>
                 </div>
@@ -631,6 +590,30 @@ export class BookingFlow {
         `;
 
         document.getElementById('app').innerHTML = html;
+
+        // ✅ ИСПРАВЛЕНИЕ: Добавляем обработчики через addEventListener
+        setTimeout(() => {
+            const bookingsBtn = document.getElementById('go-to-bookings-btn');
+            const homeBtn = document.getElementById('go-to-home-btn');
+
+            if (bookingsBtn) {
+                bookingsBtn.addEventListener('click', () => {
+                    console.log('Переход на /bookings');
+                    if (window.router) {
+                        window.router.navigate('/bookings');
+                    }
+                });
+            }
+
+            if (homeBtn) {
+                homeBtn.addEventListener('click', () => {
+                    console.log('Переход на /');
+                    if (window.router) {
+                        window.router.navigate('/');
+                    }
+                });
+            }
+        }, 100);
 
         // Отправляем уведомление через Telegram
         if (window.Telegram?.WebApp) {
