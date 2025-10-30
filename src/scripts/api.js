@@ -192,7 +192,7 @@ export class API {
             throw error;
         }
     }
-
+    
     /**
      * Создать отзыв
      */
