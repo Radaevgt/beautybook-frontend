@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BeautyBook Admin</title>
+    
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js для графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- Основные стили -->
+    <link rel="stylesheet" href="src/styles/main.css">
+    <link rel="stylesheet" href="src/styles/admin.css">
+</head>
+<body>
+    <!-- Главный контейнер приложения -->
+    <div id="app">
+        <!-- Содержимое загружается динамически -->
+        <div class="loading-screen">
+            <div class="spinner"></div>
+            <p>Загрузка админ-панели...</p>
+        </div>
+    </div>
+
+    <!-- Нижняя навигация для админов -->
+    <nav id="admin-nav" class="admin-nav" style="display: none;">
+        <button class="nav-item" data-page="dashboard">
+            <i class="fas fa-chart-line"></i>
+            <span>Главная</span>
+        </button>
+        <button class="nav-item" data-page="bookings">
+            <i class="fas fa-calendar-check"></i>
+            <span>Записи</span>
+        </button>
+        <button class="nav-item" data-page="masters">
+            <i class="fas fa-user-tie"></i>
+            <span>Мастера</span>
+        </button>
+        <button class="nav-item" data-page="services">
+            <i class="fas fa-scissors"></i>
+            <span>Услуги</span>
+        </button>
+        <button class="nav-item" data-page="more">
+            <i class="fas fa-ellipsis-h"></i>
+            <span>Ещё</span>
+        </button>
+    </nav>
+
+    <!-- Модальные окна -->
+    <div id="modal-container"></div>
+
+    <!-- Скрипты -->
+    <script type="module" src="src/scripts/app-admin.js"></script>
+</body>
+</html>
